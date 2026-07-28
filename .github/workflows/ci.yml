@@ -19,7 +19,7 @@ concurrency:
 jobs:
   quality:
     name: Quality (Node ${{ matrix.node }})
-    runs-on: ${{ fromJSON(vars.LBS_RUNNER_LABELS || '["ubuntu-latest"]') }}
+    runs-on: ${{ github.event_name == 'pull_request' && fromJSON('["ubuntu-latest"]') || fromJSON(vars.LBS_RUNNER_LABELS || '["ubuntu-latest"]') }}
     timeout-minutes: 20
     strategy:
       fail-fast: false
@@ -51,7 +51,7 @@ jobs:
 
   browser:
     name: Browser, accessibility, and offline checks
-    runs-on: ${{ fromJSON(vars.LBS_RUNNER_LABELS || '["ubuntu-latest"]') }}
+    runs-on: ${{ github.event_name == 'pull_request' && fromJSON('["ubuntu-latest"]') || fromJSON(vars.LBS_RUNNER_LABELS || '["ubuntu-latest"]') }}
     timeout-minutes: 20
     steps:
       - name: Check out source
@@ -93,7 +93,7 @@ jobs:
     needs:
       - quality
       - browser
-    runs-on: ${{ fromJSON(vars.LBS_RUNNER_LABELS || '["ubuntu-latest"]') }}
+    runs-on: ${{ github.event_name == 'pull_request' && fromJSON('["ubuntu-latest"]') || fromJSON(vars.LBS_RUNNER_LABELS || '["ubuntu-latest"]') }}
     timeout-minutes: 20
     steps:
       - name: Check out source
