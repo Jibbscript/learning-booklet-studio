@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://learning-booklet.studio/contracts/codex-skill-ui-event.schema.json",
+  "title": "codex-skill-ui/1 transport event",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["protocol", "type", "eventId", "threadId", "runId", "parentRunId", "seq", "timestamp", "source", "payload"],
+  "properties": {
+    "protocol": { "const": "codex-skill-ui/1" },
+    "type": {
+      "enum": [
+        "RUN_STARTED",
+        "RUN_FINISHED",
+        "RUN_ERROR",
+        "STEP_STARTED",
+        "STEP_FINISHED",
+        "STATE_SNAPSHOT",
+        "TOOL_CALL_START",
+        "TOOL_CALL_ARGS",
+        "TOOL_CALL_END",
+        "TOOL_CALL_RESULT",
+        "MESSAGES_SNAPSHOT"
+      ]
+    },
+    "eventId": { "type": "string", "minLength": 1, "maxLength": 1024 },
+    "threadId": { "type": "string", "minLength": 1, "maxLength": 256 },
+    "runId": { "type": "string", "minLength": 1, "maxLength": 256 },
+    "parentRunId": { "oneOf": [{ "type": "string", "minLength": 1, "maxLength": 256 }, { "type": "null" }] },
+    "seq": { "type": "integer", "minimum": 0 },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}\\.[0-9]{3}Z$"
+    },
+    "source": {
+      "oneOf": [
+        { "enum": ["orchestrator", "workflow-engine", "mcp-server", "widget"] },
+        { "type": "string", "pattern": "^verifier:[A-Za-z0-9._:-]+$" }
+      ]
+    },
+    "payload": { "type": "object" }
+  }
+}

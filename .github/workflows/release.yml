@@ -1,0 +1,171 @@
+name: Production release
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing annotated tag to promote, for example v0.1.3
+        required: true
+        type: string
+
+permissions:
+  contents: write
+  id-token: write
+  attestations: write
+
+concurrency:
+  group: production-release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    name: Verify and publish
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment: production
+    env:
+      GH_TOKEN: ${{ github.token }}
+      RELEASE_TAG: ${{ inputs.tag }}
+    steps:
+      - name: Check out tagged source
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ inputs.tag }}
+          fetch-depth: 0
+
+      - name: Set up release Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: "26"
+          cache: npm
+
+      - name: Validate tag and draft release
+        run: |
+          VERSION="$(node -p "JSON.parse(require('fs').readFileSync('package.json')).version")"
+          test "$RELEASE_TAG" = "v$VERSION"
+          test "$(git rev-parse HEAD)" = "$(git rev-list -n 1 "$RELEASE_TAG")"
+          test "$(gh release view "$RELEASE_TAG" --json isDraft --jq .isDraft)" = "true"
+          printf 'VERSION=%s\n' "$VERSION" >> "$GITHUB_ENV"
+
+      - name: Install exact dependencies
+        run: npm ci
+
+      - name: Check repository policy
+        run: npm run check
+
+      - name: Validate plugin and public skill
+        run: npm run validate
+
+      - name: Run deterministic test suites
+        run: npm test
+
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Run browser checks
+        run: npm run test:e2e
+
+      - name: Download draft evidence assets
+        run: |
+          mkdir -p "$RUNNER_TEMP/release-evidence-downloads"
+          gh release download "$RELEASE_TAG" \
+            --dir "$RUNNER_TEMP/release-evidence-downloads" \
+            --pattern "learning-booklet-studio-$VERSION-*-evidence.tar.gz"
+          for kind in automated sol native-macos-intel; do
+            test -f "$RUNNER_TEMP/release-evidence-downloads/learning-booklet-studio-$VERSION-$kind-evidence.tar.gz"
+          done
+
+      - name: Extract evidence assets
+        run: |
+          for kind in automated sol native-macos-intel; do
+            archive="$RUNNER_TEMP/release-evidence-downloads/learning-booklet-studio-$VERSION-$kind-evidence.tar.gz"
+            destination="$RUNNER_TEMP/release-evidence/$kind"
+            if tar -tzf "$archive" | awk 'BEGIN { bad=0 } /(^\\/|(^|\\/)\\.\\.($|\\/))/ { bad=1 } END { exit bad ? 0 : 1 }'; then
+              echo "Unsafe path in evidence archive: $archive" >&2
+              exit 1
+            fi
+            mkdir -p "$destination"
+            tar -xzf "$archive" -C "$destination"
+          done
+          apple_archive="$RUNNER_TEMP/release-evidence-downloads/learning-booklet-studio-$VERSION-native-macos-apple-silicon-evidence.tar.gz"
+          if test -f "$apple_archive"; then
+            if tar -tzf "$apple_archive" | awk 'BEGIN { bad=0 } /(^\\/|(^|\\/)\\.\\.($|\\/))/ { bad=1 } END { exit bad ? 0 : 1 }'; then
+              echo "::warning::Ignoring unsafe optional Apple Silicon evidence archive; production remains governed by required gates."
+            else
+              mkdir -p "$RUNNER_TEMP/release-evidence/native-macos-apple-silicon"
+              if ! tar -xzf "$apple_archive" -C "$RUNNER_TEMP/release-evidence/native-macos-apple-silicon"; then
+                echo "::warning::Ignoring unreadable optional Apple Silicon evidence archive; production remains governed by required gates."
+                rm -rf "$RUNNER_TEMP/release-evidence/native-macos-apple-silicon"
+              fi
+            fi
+          fi
+
+      - name: Build exact release inputs
+        run: npm run build
+
+      - name: Run fail-closed release verifier
+        run: |
+          verifier_args=(
+            --test-evidence "$RUNNER_TEMP/release-evidence/automated/automated.json"
+            --eval-evidence "$RUNNER_TEMP/release-evidence/sol/sol-eval.json"
+            --native-intel-evidence "$RUNNER_TEMP/release-evidence/native-macos-intel/evidence.json"
+          )
+          apple_evidence="$RUNNER_TEMP/release-evidence/native-macos-apple-silicon/evidence.json"
+          if test -f "$apple_evidence"; then
+            verifier_args+=(--native-apple-silicon-evidence "$apple_evidence")
+          else
+            echo "::notice::Apple Silicon native evidence is not available or was unusable; recording a non-blocking advisory."
+          fi
+          node scripts/verify-oss-release.mjs "${verifier_args[@]}"
+
+      - name: Assert production decision and checksums
+        run: |
+          node --input-type=module <<'NODE'
+          import { readFileSync } from "node:fs";
+          const report = JSON.parse(readFileSync("dist/release/release-report.json", "utf8"));
+          if (report.decision.status !== "pass") {
+            throw new Error(`Production decision is ${report.decision.status}, not pass.`);
+          }
+          for (const gate of report.gates.filter((entry) => entry.productionRequired !== false)) {
+            if (gate.status !== "pass") {
+              throw new Error(`Release gate ${gate.id} is ${gate.status}.`);
+            }
+          }
+          NODE
+          (
+            cd dist/release
+            shasum -a 256 -c SHA256SUMS
+          )
+
+      - name: Attest release archive
+        uses: actions/attest-build-provenance@e8998f949152b193b063cb0ec769d69d929409be # v2
+        with:
+          subject-path: dist/release/learning-booklet-studio-${{ env.VERSION }}.tar.gz
+
+      - name: Upload verified release assets
+        run: |
+          gh release upload "$RELEASE_TAG" \
+            "dist/release/learning-booklet-studio-$VERSION.tar.gz" \
+            "dist/release/release-manifest.json" \
+            "dist/release/release-report.json" \
+            "dist/release/SHA256SUMS" \
+            --clobber
+
+      - name: Publish production release
+        run: |
+          gh release edit "$RELEASE_TAG" \
+            --draft=false \
+            --prerelease=false \
+            --latest
+
+      - name: Retain production verification report
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: production-verification-${{ inputs.tag }}
+          path: |
+            dist/release/release-report.json
+            dist/release/release-manifest.json
+            dist/release/SHA256SUMS
+          if-no-files-found: warn
+          retention-days: 90

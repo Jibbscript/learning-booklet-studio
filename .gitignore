@@ -1,0 +1,9 @@
+node_modules/
+dist/
+.DS_Store
+.learning-booklet-runs/
+packages/widget/dist/
+packages/widget/node_modules/
+test-results/
+playwright-report/
+*.log

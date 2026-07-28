@@ -1,0 +1,152 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    name: Quality (Node ${{ matrix.node }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        node:
+          - "20"
+          - "26"
+    steps:
+      - name: Check out source
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: npm
+
+      - name: Install exact dependencies
+        run: npm ci
+
+      - name: Check repository policy
+        run: npm run check
+
+      - name: Validate plugin and public skill
+        run: npm run validate
+
+      - name: Run deterministic test suites
+        run: npm test
+
+  browser:
+    name: Browser, accessibility, and offline checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check out source
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: "20"
+          cache: npm
+
+      - name: Install exact dependencies
+        run: npm ci
+
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Run browser checks
+        run: npm run test:e2e
+
+      - name: Retain browser evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: browser-evidence-${{ github.sha }}
+          path: |
+            test-results/e2e/
+            playwright-report/
+          if-no-files-found: warn
+          retention-days: 14
+
+  candidate:
+    name: Reproducible candidate package
+    needs:
+      - quality
+      - browser
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check out source
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Set up release Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: "26"
+          cache: npm
+
+      - name: Install exact dependencies
+        run: npm ci
+
+      - name: Build release inputs
+        run: npm run build
+
+      - name: Package first candidate
+        run: npm run test:release:partial
+
+      - name: Retain first candidate digests
+        run: |
+          mkdir -p "$RUNNER_TEMP/first-candidate"
+          cp dist/release/SHA256SUMS "$RUNNER_TEMP/first-candidate/SHA256SUMS"
+          cp dist/release/release-manifest.json "$RUNNER_TEMP/first-candidate/release-manifest.json"
+
+      - name: Package second candidate
+        run: npm run test:release:partial
+
+      - name: Prove same-host reproducibility
+        run: |
+          cmp "$RUNNER_TEMP/first-candidate/SHA256SUMS" dist/release/SHA256SUMS
+          cmp "$RUNNER_TEMP/first-candidate/release-manifest.json" dist/release/release-manifest.json
+
+      - name: Assert package hard gates
+        run: |
+          node --input-type=module <<'NODE'
+          import { readFileSync } from "node:fs";
+          const report = JSON.parse(readFileSync("dist/release/release-report.json", "utf8"));
+          for (const id of ["repository-policy", "candidate-package"]) {
+            const gate = report.gates.find((entry) => entry.id === id);
+            if (gate?.status !== "pass") {
+              throw new Error(`${id} did not pass: ${gate?.status ?? "missing"}`);
+            }
+          }
+          if (report.decision.status === "fail") {
+            throw new Error("Candidate package produced a failed release decision.");
+          }
+          NODE
+
+      - name: Retain candidate package
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: candidate-${{ github.sha }}
+          path: |
+            dist/release/learning-booklet-studio-*.tar.gz
+            dist/release/release-manifest.json
+            dist/release/release-report.json
+            dist/release/SHA256SUMS
+          if-no-files-found: error
+          retention-days: 14

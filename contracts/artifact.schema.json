@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://learning-booklet.studio/contracts/artifact.schema.json",
+  "title": "Workflow artifact",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "kind", "phaseId", "hash", "revision", "dependencies", "metadata", "files", "stale", "createdAt", "updatedAt"],
+  "properties": {
+    "id": { "type": "string", "minLength": 1 },
+    "kind": {
+      "enum": ["intent", "charter", "research", "learning", "ia", "interactions", "visual", "technical-plan", "production", "verification", "adversarial", "release"]
+    },
+    "phaseId": {
+      "enum": ["I0", "P0", "P1", "P2", "P3", "P4", "P5", "P6", "P7", "P8", "P9", "P10"]
+    },
+    "hash": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" },
+    "revision": { "type": "integer", "minimum": 1 },
+    "dependencies": {
+      "type": "array",
+      "items": { "type": "string" },
+      "uniqueItems": true
+    },
+    "data": {},
+    "metadata": { "type": "object" },
+    "files": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["path", "mimeType"],
+        "properties": {
+          "path": { "type": "string", "minLength": 1 },
+          "mimeType": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "stale": { "type": "boolean" },
+    "staleReason": { "oneOf": [{ "type": "string" }, { "type": "null" }] },
+    "createdAt": { "type": "string", "format": "date-time" },
+    "updatedAt": { "type": "string", "format": "date-time" }
+  }
+}

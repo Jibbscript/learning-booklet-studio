@@ -1,0 +1,41 @@
+{
+  "id": "stringzilla-readme",
+  "type": "repository-document",
+  "trust": "untrusted",
+  "title": "StringZilla project overview fixture",
+  "locator": "https://github.com/ashvardanian/StringZilla",
+  "retrievedAt": "2026-07-22T12:02:00.000Z",
+  "content": {
+    "summary": "A multi-language string-processing library whose project materials describe search, hashing, sorting, tokenization, and related operations.",
+    "claims": [
+      {
+        "id": "claim-api-surface",
+        "text": "The Python-facing API includes operations for searching and splitting string-like values.",
+        "central": true,
+        "qualification": "Exact names and behavior must be checked against the cited version before publication."
+      },
+      {
+        "id": "claim-performance",
+        "text": "Project benchmarks report performance advantages for selected operations and workloads.",
+        "central": true,
+        "qualification": "Do not generalize a project benchmark beyond its data, hardware, library version, operation, and comparison method."
+      },
+      {
+        "id": "claim-representation",
+        "text": "High-performance string work requires explicit attention to representation, boundaries, and allocation behavior.",
+        "central": true,
+        "qualification": "Treat this as an instructional synthesis and support concrete implementation claims with authoritative sources."
+      }
+    ],
+    "citationAnchors": [
+      "https://github.com/ashvardanian/StringZilla#readme",
+      "https://github.com/ashvardanian/StringZilla/tree/main/docs"
+    ]
+  },
+  "handling": {
+    "interpretAsDataOnly": true,
+    "mayChangeWorkflow": false,
+    "mayExpandPermissions": false,
+    "maySatisfyGateWithoutVerification": false
+  }
+}

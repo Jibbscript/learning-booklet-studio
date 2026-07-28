@@ -1,0 +1,437 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://learning-booklet.studio/evidence/native-macos-evidence.schema.json",
+  "title": "Native macOS Codex desktop evidence",
+  "type": "object",
+  "additionalProperties": false,
+  "$defs": {
+    "journeyIdentity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["observationId", "taskId", "threadId", "runId", "observedAt"],
+      "properties": {
+        "observationId": { "type": "string", "minLength": 1 },
+        "taskId": { "type": "string", "minLength": 1 },
+        "threadId": { "type": "string", "minLength": 1 },
+        "runId": { "type": "string", "minLength": 1 },
+        "parentRunId": { "type": ["string", "null"], "minLength": 1 },
+        "mcpProcessId": { "type": ["integer", "null"], "minimum": 1 },
+        "observedAt": { "type": "string", "format": "date-time" }
+      }
+    },
+    "mcpJourneyIdentity": {
+      "allOf": [
+        { "$ref": "#/$defs/journeyIdentity" },
+        {
+          "required": ["mcpProcessId"],
+          "properties": {
+            "mcpProcessId": { "type": "integer", "minimum": 1 }
+          }
+        }
+      ]
+    },
+    "nullableJourneyIdentity": {
+      "oneOf": [
+        { "$ref": "#/$defs/journeyIdentity" },
+        { "type": "null" }
+      ]
+    },
+    "privacyReview": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["method", "status", "reviewedAt", "reviewer"],
+      "properties": {
+        "method": {
+          "enum": ["automated-text-scan", "manual-visual-review", "automated-and-manual", "not-applicable"]
+        },
+        "status": { "const": "pass" },
+        "reviewedAt": { "type": "string", "format": "date-time" },
+        "reviewer": { "type": "string", "minLength": 1 }
+      }
+    }
+  },
+  "required": [
+    "schemaVersion",
+    "gate",
+    "status",
+    "architecture",
+    "translated",
+    "macOS",
+    "hardware",
+    "chatgptDesktop",
+    "plugin",
+    "journeyIdentities",
+    "checks",
+    "attachments",
+    "observedAt"
+  ],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "gate": {
+      "enum": ["native-macos-intel", "native-macos-apple-silicon"]
+    },
+    "status": {
+      "enum": ["pass", "fail", "partial", "not_run", "not_applicable"]
+    },
+    "architecture": { "enum": ["x86_64", "arm64"] },
+    "translated": { "type": "boolean" },
+    "macOS": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "build"],
+      "properties": {
+        "version": { "type": "string", "minLength": 1 },
+        "build": { "type": "string", "minLength": 1 }
+      }
+    },
+    "hardware": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["modelName", "modelIdentifier", "processor"],
+      "properties": {
+        "modelName": { "type": "string", "minLength": 1 },
+        "modelIdentifier": { "type": "string", "minLength": 1 },
+        "processor": { "type": "string", "minLength": 1 },
+        "memoryGB": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "chatgptDesktop": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "bundleIdentifier",
+        "version",
+        "build",
+        "surface",
+        "mainExecutableArchitecture",
+        "runningProgram",
+        "runningPid",
+        "runningProcessArchitecture",
+        "runningProcessArchitectureMethod",
+        "runningProcessArchitectureStatus"
+      ],
+      "properties": {
+        "bundleIdentifier": { "const": "com.openai.codex" },
+        "version": { "type": "string", "minLength": 1 },
+        "build": { "type": "string", "minLength": 1 },
+        "surface": { "const": "Codex" },
+        "mainExecutableArchitecture": { "enum": ["x86_64", "arm64", "universal"] },
+        "mainExecutableSha256": { "type": ["string", "null"], "pattern": "^[a-f0-9]{64}$" },
+        "codeDirectoryHash": { "type": ["string", "null"], "minLength": 1 },
+        "requiresNativeExecution": { "type": "boolean" },
+        "runningProgram": { "type": ["string", "null"], "minLength": 1 },
+        "runningPid": { "type": ["integer", "null"], "minimum": 1 },
+        "runningProcessArchitecture": { "type": ["string", "null"], "enum": ["x86_64", "arm64", null] },
+        "runningProcessArchitectureMethod": {
+          "type": ["string", "null"],
+          "enum": ["proc_pidinfo-PROC_PIDARCHINFO", "activity-monitor-kind", null]
+        },
+        "runningProcessArchitectureStatus": {
+          "enum": ["pass", "fail", "partial", "not_run"]
+        }
+      }
+    },
+    "plugin": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "archiveSha256", "contentDigest", "installed"],
+      "properties": {
+        "version": { "type": ["string", "null"] },
+        "archiveSha256": { "type": ["string", "null"], "pattern": "^[a-f0-9]{64}$" },
+        "contentDigest": { "type": ["string", "null"], "pattern": "^[a-f0-9]{64}$" },
+        "installed": { "type": "boolean" },
+        "marketplace": { "type": ["string", "null"] }
+      }
+    },
+    "modelObserved": { "type": ["string", "null"] },
+    "runId": { "type": ["string", "null"] },
+    "artifactSha256": { "type": ["string", "null"], "pattern": "^[a-f0-9]{64}$" },
+    "journeyIdentities": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["explicitDiscovery", "implicitDiscovery", "interrupted", "resumed", "restarted"],
+      "properties": {
+        "explicitDiscovery": { "$ref": "#/$defs/nullableJourneyIdentity" },
+        "implicitDiscovery": { "$ref": "#/$defs/nullableJourneyIdentity" },
+        "interrupted": { "$ref": "#/$defs/nullableJourneyIdentity" },
+        "resumed": { "$ref": "#/$defs/nullableJourneyIdentity" },
+        "restarted": { "$ref": "#/$defs/nullableJourneyIdentity" }
+      }
+    },
+    "keyboardSelection": {
+      "type": ["object", "null"],
+      "additionalProperties": false,
+      "required": ["status", "keysUsed", "activationKey", "prohibitedInputObserved", "evidenceRef"],
+      "properties": {
+        "status": { "enum": ["pass", "fail", "partial", "not_run"] },
+        "keysUsed": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "enum": ["Tab", "Shift+Tab", "Space", "Enter"] }
+        },
+        "activationKey": { "enum": ["Space", "Enter"] },
+        "prohibitedInputObserved": { "type": "boolean" },
+        "evidenceRef": { "type": "string", "minLength": 1 }
+      }
+    },
+    "checks": {
+      "type": "array",
+      "minItems": 6,
+      "maxItems": 6,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "status", "executed", "summary", "evidenceRefs"],
+        "properties": {
+          "id": { "enum": ["MAC-001", "MAC-002", "MAC-003", "MAC-004", "MAC-005", "MAC-006"] },
+          "status": { "enum": ["pass", "fail", "partial", "not_run", "not_applicable"] },
+          "executed": { "type": "boolean" },
+          "summary": { "type": "string", "minLength": 1 },
+          "evidenceRefs": {
+            "type": "array",
+            "items": { "type": "string", "minLength": 1 },
+            "uniqueItems": true
+          }
+        },
+        "allOf": [
+          {
+            "if": { "properties": { "status": { "const": "pass" } } },
+            "then": {
+              "properties": {
+                "executed": { "const": true },
+                "evidenceRefs": { "minItems": 1 }
+              }
+            }
+          },
+          {
+            "if": { "properties": { "status": { "const": "not_run" } } },
+            "then": { "properties": { "executed": { "const": false } } }
+          }
+        ]
+      }
+    },
+    "attachments": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["path", "sha256", "kind", "group", "privacyReview"],
+        "properties": {
+          "path": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))[^\\\\]+$"
+          },
+          "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+          "kind": {
+            "enum": ["environment", "screenshot", "recording", "log", "checklist", "artifact", "test-result"]
+          },
+          "group": {
+            "enum": [
+              "environment",
+              "candidate-binding",
+              "explicit-discovery",
+              "implicit-discovery",
+              "interruption",
+              "resume",
+              "failure-repair-history",
+              "degraded-recovery",
+              "restart-reconciliation",
+              "keyboard-selection",
+              "voiceover",
+              "responsive-layout",
+              "completed-artifact",
+              "validation-results"
+            ]
+          },
+          "layoutContext": {
+            "enum": ["narrow", "normal", "fullscreen"]
+          },
+          "privacyReview": { "$ref": "#/$defs/privacyReview" }
+        },
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "group": {
+                  "enum": ["explicit-discovery", "implicit-discovery", "degraded-recovery"]
+                }
+              },
+              "required": ["group"]
+            },
+            "then": { "properties": { "kind": { "const": "screenshot" } } }
+          },
+          {
+            "if": {
+              "properties": { "group": { "const": "keyboard-selection" } },
+              "required": ["group"]
+            },
+            "then": { "properties": { "kind": { "enum": ["log", "recording"] } } }
+          },
+          {
+            "if": {
+              "properties": { "group": { "const": "voiceover" } },
+              "required": ["group"]
+            },
+            "then": { "properties": { "kind": { "enum": ["checklist", "log"] } } }
+          },
+          {
+            "if": {
+              "properties": { "group": { "const": "responsive-layout" } },
+              "required": ["group"]
+            },
+            "then": {
+              "required": ["layoutContext"],
+              "properties": { "kind": { "enum": ["screenshot", "recording"] } }
+            }
+          },
+          {
+            "if": {
+              "properties": { "group": { "const": "completed-artifact" } },
+              "required": ["group"]
+            },
+            "then": { "properties": { "kind": { "const": "artifact" } } }
+          }
+        ]
+      }
+    },
+    "observedAt": { "type": "string", "format": "date-time" },
+    "tester": { "type": ["string", "null"] },
+    "limitations": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 },
+      "uniqueItems": true
+    }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "gate": { "const": "native-macos-intel" } } },
+      "then": {
+        "properties": {
+          "architecture": { "const": "x86_64" },
+          "chatgptDesktop": {
+            "properties": {
+              "mainExecutableArchitecture": { "enum": ["x86_64", "universal"] }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "gate": { "const": "native-macos-apple-silicon" } } },
+      "then": {
+        "properties": {
+          "architecture": { "const": "arm64" },
+          "chatgptDesktop": {
+            "properties": {
+              "mainExecutableArchitecture": { "enum": ["arm64", "universal"] }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "status": { "const": "pass" } } },
+      "then": {
+        "required": ["modelObserved", "runId", "artifactSha256", "tester", "keyboardSelection"],
+        "properties": {
+          "translated": { "const": false },
+          "modelObserved": { "type": "string", "minLength": 1 },
+          "runId": { "type": "string", "minLength": 1 },
+          "artifactSha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+          "tester": { "type": "string", "minLength": 1 },
+          "plugin": {
+            "properties": {
+              "version": { "type": "string", "minLength": 1 },
+              "archiveSha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+              "contentDigest": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+              "installed": { "const": true },
+              "marketplace": { "type": "string", "minLength": 1 }
+            }
+          },
+          "chatgptDesktop": {
+            "properties": {
+              "runningProgram": { "type": "string", "minLength": 1 },
+              "runningPid": { "type": "integer", "minimum": 1 },
+              "mainExecutableSha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+              "codeDirectoryHash": { "type": "string", "minLength": 1 },
+              "requiresNativeExecution": { "const": true },
+              "runningProcessArchitectureMethod": { "type": "string", "minLength": 1 },
+              "runningProcessArchitectureStatus": { "const": "pass" }
+            }
+          },
+          "journeyIdentities": {
+            "properties": {
+              "explicitDiscovery": { "$ref": "#/$defs/journeyIdentity" },
+              "implicitDiscovery": { "$ref": "#/$defs/journeyIdentity" },
+              "interrupted": { "$ref": "#/$defs/journeyIdentity" },
+              "resumed": { "$ref": "#/$defs/mcpJourneyIdentity" },
+              "restarted": { "$ref": "#/$defs/mcpJourneyIdentity" }
+            }
+          },
+          "keyboardSelection": {
+            "type": "object",
+            "properties": {
+              "status": { "const": "pass" },
+              "prohibitedInputObserved": { "const": false }
+            }
+          },
+          "attachments": {
+            "minItems": 16,
+            "allOf": [
+              { "contains": { "properties": { "group": { "const": "environment" } }, "required": ["group"] }, "minContains": 1 },
+              { "contains": { "properties": { "group": { "const": "candidate-binding" } }, "required": ["group"] }, "minContains": 1 },
+              { "contains": { "properties": { "group": { "const": "explicit-discovery" }, "kind": { "const": "screenshot" } }, "required": ["group", "kind"] }, "minContains": 1 },
+              { "contains": { "properties": { "group": { "const": "implicit-discovery" }, "kind": { "const": "screenshot" } }, "required": ["group", "kind"] }, "minContains": 1 },
+              { "contains": { "properties": { "group": { "const": "interruption" } }, "required": ["group"] }, "minContains": 1 },
+              { "contains": { "properties": { "group": { "const": "resume" } }, "required": ["group"] }, "minContains": 1 },
+              { "contains": { "properties": { "group": { "const": "failure-repair-history" } }, "required": ["group"] }, "minContains": 1 },
+              { "contains": { "properties": { "group": { "const": "degraded-recovery" }, "kind": { "const": "screenshot" } }, "required": ["group", "kind"] }, "minContains": 1 },
+              { "contains": { "properties": { "group": { "const": "restart-reconciliation" } }, "required": ["group"] }, "minContains": 1 },
+              { "contains": { "properties": { "group": { "const": "keyboard-selection" }, "kind": { "enum": ["log", "recording"] } }, "required": ["group", "kind"] }, "minContains": 1 },
+              { "contains": { "properties": { "group": { "const": "voiceover" }, "kind": { "enum": ["checklist", "log"] } }, "required": ["group", "kind"] }, "minContains": 1 },
+              { "contains": { "properties": { "group": { "const": "responsive-layout" }, "kind": { "enum": ["screenshot", "recording"] }, "layoutContext": { "const": "narrow" } }, "required": ["group", "kind", "layoutContext"] }, "minContains": 1 },
+              { "contains": { "properties": { "group": { "const": "responsive-layout" }, "kind": { "enum": ["screenshot", "recording"] }, "layoutContext": { "const": "normal" } }, "required": ["group", "kind", "layoutContext"] }, "minContains": 1 },
+              { "contains": { "properties": { "group": { "const": "responsive-layout" }, "kind": { "enum": ["screenshot", "recording"] }, "layoutContext": { "const": "fullscreen" } }, "required": ["group", "kind", "layoutContext"] }, "minContains": 1 },
+              { "contains": { "properties": { "group": { "const": "completed-artifact" }, "kind": { "const": "artifact" } }, "required": ["group", "kind"] }, "minContains": 1 },
+              { "contains": { "properties": { "group": { "const": "validation-results" } }, "required": ["group"] }, "minContains": 1 }
+            ]
+          },
+          "checks": {
+            "allOf": [
+              { "contains": { "properties": { "id": { "const": "MAC-001" }, "status": { "const": "pass" } }, "required": ["id", "status"] } },
+              { "contains": { "properties": { "id": { "const": "MAC-002" }, "status": { "const": "pass" } }, "required": ["id", "status"] } },
+              { "contains": { "properties": { "id": { "const": "MAC-003" }, "status": { "const": "pass" } }, "required": ["id", "status"] } },
+              { "contains": { "properties": { "id": { "const": "MAC-004" }, "status": { "const": "pass" } }, "required": ["id", "status"] } },
+              { "contains": { "properties": { "id": { "const": "MAC-005" }, "status": { "const": "pass" } }, "required": ["id", "status"] } },
+              { "contains": { "properties": { "id": { "const": "MAC-006" }, "status": { "const": "pass" } }, "required": ["id", "status"] } }
+            ]
+          }
+        },
+        "allOf": [
+          {
+            "if": { "properties": { "gate": { "const": "native-macos-intel" } } },
+            "then": {
+              "properties": {
+                "chatgptDesktop": {
+                  "properties": { "runningProcessArchitecture": { "const": "x86_64" } }
+                }
+              }
+            }
+          },
+          {
+            "if": { "properties": { "gate": { "const": "native-macos-apple-silicon" } } },
+            "then": {
+              "properties": {
+                "chatgptDesktop": {
+                  "properties": { "runningProcessArchitecture": { "const": "arm64" } }
+                }
+              }
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

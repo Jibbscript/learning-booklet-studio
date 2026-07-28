@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "learning_booklet_studio": {
+      "command": "node",
+      "args": [
+        "./dist/mcp/server.mjs"
+      ],
+      "cwd": "."
+    }
+  }
+}

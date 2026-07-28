@@ -1,0 +1,153 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://learning-booklet.studio/contracts/run-state.schema.json",
+  "title": "Learning Booklet Studio run state",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "runId",
+    "threadId",
+    "parentRunId",
+    "resume",
+    "mode",
+    "status",
+    "currentLayer",
+    "currentPhase",
+    "stateVersion",
+    "eventCursor",
+    "terminalReason",
+    "executionStatus",
+    "terminalOutcome",
+    "finishedAt",
+    "phases",
+    "intent",
+    "design",
+    "pendingDecision",
+    "interrupts",
+    "artifacts",
+    "artifactIndex",
+    "evidence",
+    "gateResults",
+    "findings",
+    "sources",
+    "events",
+    "idempotency"
+  ],
+  "properties": {
+    "schemaVersion": { "const": "1.0.0" },
+    "runId": { "type": "string", "minLength": 1 },
+    "threadId": { "type": "string", "minLength": 1 },
+    "parentRunId": { "oneOf": [{ "type": "string", "minLength": 1 }, { "type": "null" }] },
+    "resume": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["interruptId", "value"],
+        "properties": {
+          "interruptId": { "type": "string", "minLength": 1 },
+          "value": {}
+        }
+      }
+    },
+    "mode": { "enum": ["manifest_only", "plan_only", "plan_then_build"] },
+    "status": { "enum": ["draft", "active", "awaiting_user", "failed_gate", "blocked_external", "specified", "planned", "completed"] },
+    "currentLayer": { "enum": ["intent", "planning", "build", "release"] },
+    "currentPhase": { "enum": ["I0", "P0", "P1", "P2", "P3", "P4", "P5", "P6", "P7", "P8", "P9", "P10"] },
+    "stateVersion": { "type": "integer", "minimum": 1 },
+    "eventCursor": { "type": "integer", "minimum": 1 },
+    "terminalReason": { "oneOf": [{ "type": "string" }, { "type": "null" }] },
+    "executionStatus": { "enum": ["running", "interrupt", "success", "cancelled", "failed"] },
+    "terminalOutcome": { "oneOf": [{ "enum": ["success", "interrupt", "cancelled"] }, { "type": "null" }] },
+    "finishedAt": { "oneOf": [{ "type": "string", "format": "date-time" }, { "type": "null" }] },
+    "createdAt": { "type": "string", "format": "date-time" },
+    "updatedAt": { "type": "string", "format": "date-time" },
+    "phases": {
+      "type": "object",
+      "required": ["I0", "P0", "P1", "P2", "P3", "P4", "P5", "P6", "P7", "P8", "P9", "P10"],
+      "additionalProperties": false,
+      "patternProperties": {
+        "^(I0|P0|P1|P2|P3|P4|P5|P6|P7|P8|P9|P10)$": {
+          "type": "object",
+          "required": ["id", "name", "layer", "status", "attempt", "gateResults", "attempts", "reopenHistory"],
+          "properties": {
+            "id": { "type": "string" },
+            "name": { "type": "string" },
+            "layer": { "enum": ["intent", "planning", "build", "release"] },
+            "status": { "enum": ["not_started", "active", "awaiting_user", "failed", "passed", "stale", "skipped"] },
+            "attempt": { "type": "integer", "minimum": 0 },
+            "gateResults": { "type": "object", "additionalProperties": { "type": "string" } },
+            "attempts": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["attempt", "status", "startedAt", "finishedAt", "failure", "artifactIds", "evidenceIds", "gateResults"],
+                "properties": {
+                  "attempt": { "type": "integer", "minimum": 1 },
+                  "status": { "enum": ["active", "passed", "failed"] },
+                  "startedAt": { "type": "string", "format": "date-time" },
+                  "finishedAt": { "oneOf": [{ "type": "string", "format": "date-time" }, { "type": "null" }] },
+                  "failure": { "oneOf": [{ "type": "object" }, { "type": "null" }] },
+                  "artifactIds": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+                  "evidenceIds": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+                  "gateResults": { "type": "array", "items": { "$ref": "gate-result.schema.json" } }
+                }
+              }
+            },
+            "reopenHistory": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["failedPhaseId", "responsiblePhaseId", "failureCode", "reason", "reopenedAt", "priorAttempt"],
+                "properties": {
+                  "failedPhaseId": { "type": "string" },
+                  "responsiblePhaseId": { "type": "string" },
+                  "failureCode": { "oneOf": [{ "type": "string" }, { "type": "null" }] },
+                  "reason": { "type": "string" },
+                  "reopenedAt": { "type": "string", "format": "date-time" },
+                  "priorAttempt": { "type": "integer", "minimum": 0 }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "intent": { "$ref": "intent-state.schema.json" },
+    "design": { "$ref": "design.schema.json" },
+    "pendingDecision": { "oneOf": [{ "type": "object" }, { "type": "null" }] },
+    "interrupts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "type", "fields", "phaseId", "status", "openedAt", "resolvedAt", "resolvedRunId"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "type": { "type": "string", "minLength": 1 },
+          "fields": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+          "phaseId": { "type": "string" },
+          "status": { "enum": ["open", "resolved"] },
+          "openedAt": { "type": "string", "format": "date-time" },
+          "resolvedAt": { "oneOf": [{ "type": "string", "format": "date-time" }, { "type": "null" }] },
+          "resolvedRunId": { "oneOf": [{ "type": "string" }, { "type": "null" }] },
+          "resolution": {}
+        }
+      }
+    },
+    "artifacts": { "type": "object", "additionalProperties": { "$ref": "artifact.schema.json" } },
+    "artifactIndex": { "type": "object", "additionalProperties": { "type": "string" } },
+    "evidence": { "type": "object", "additionalProperties": { "$ref": "evidence.schema.json" } },
+    "gateResults": { "type": "object", "additionalProperties": { "$ref": "gate-result.schema.json" } },
+    "findings": { "type": "object" },
+    "sources": { "type": "object" },
+    "residualRisks": { "type": "array" },
+    "limitations": { "type": "array" },
+    "permissions": { "type": "object" },
+    "events": { "type": "array", "items": { "$ref": "workflow-event.schema.json" } },
+    "idempotency": { "type": "object" }
+  }
+}

@@ -1,0 +1,58 @@
+{
+  "runId": "stringzilla-golden",
+  "mode": "plan_then_build",
+  "fields": {
+    "topic": {
+      "value": "StringZilla string-processing fundamentals and performance reasoning",
+      "origin": "user",
+      "locked": true,
+      "confidence": 1,
+      "updatedAt": "2026-07-22T12:00:00.000Z",
+      "evidenceRefs": ["source:stringzilla-readme"]
+    },
+    "learner": {
+      "value": "Python developers who know bytes and Unicode but are new to high-performance string libraries",
+      "origin": "user",
+      "locked": true,
+      "confidence": 1,
+      "updatedAt": "2026-07-22T12:00:00.000Z",
+      "evidenceRefs": []
+    },
+    "depth": {
+      "value": "intermediate",
+      "origin": "user",
+      "locked": true,
+      "confidence": 1,
+      "updatedAt": "2026-07-22T12:00:00.000Z",
+      "evidenceRefs": []
+    },
+    "duration": {
+      "value": "35 minutes",
+      "origin": "user",
+      "locked": true,
+      "confidence": 1,
+      "updatedAt": "2026-07-22T12:00:00.000Z",
+      "evidenceRefs": []
+    },
+    "scope": {
+      "value": {
+        "include": [
+          "search and split operations",
+          "bytes versus Unicode boundaries",
+          "benchmark interpretation",
+          "copy-versus-view tradeoffs"
+        ],
+        "exclude": [
+          "installation walkthrough",
+          "unsupported universal speed claims",
+          "production capacity planning"
+        ]
+      },
+      "origin": "user",
+      "locked": true,
+      "confidence": 1,
+      "updatedAt": "2026-07-22T12:00:00.000Z",
+      "evidenceRefs": []
+    }
+  }
+}

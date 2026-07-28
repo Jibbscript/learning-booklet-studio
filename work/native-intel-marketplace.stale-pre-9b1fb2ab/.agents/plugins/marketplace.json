@@ -1,0 +1,20 @@
+{
+  "name": "learning-booklet-native-intel",
+  "interface": {
+    "displayName": "Learning Booklet Studio Native Intel Verification"
+  },
+  "plugins": [
+    {
+      "name": "learning-booklet-studio",
+      "source": {
+        "source": "local",
+        "path": "./plugins/learning-booklet-studio"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    }
+  ]
+}

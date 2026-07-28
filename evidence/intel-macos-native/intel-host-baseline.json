@@ -1,0 +1,104 @@
+{
+  "schemaVersion": 1,
+  "gate": "native-macos-intel",
+  "status": "partial",
+  "architecture": "x86_64",
+  "translated": false,
+  "macOS": {
+    "version": "15.7.7",
+    "build": "24G720"
+  },
+  "hardware": {
+    "modelName": "MacBook Pro",
+    "modelIdentifier": "MacBookPro15,1",
+    "processor": "Intel Core i7, 2.6 GHz, 6 cores",
+    "memoryGB": 32
+  },
+  "chatgptDesktop": {
+    "bundleIdentifier": "com.openai.codex",
+    "version": "26.715.72028",
+    "build": "5706",
+    "surface": "Codex",
+    "mainExecutableArchitecture": "x86_64",
+    "mainExecutableSha256": "79ea9959fc6376d63d52ef48afc0df0078a67a53a65b7929832d7c54138aeb0b",
+    "codeDirectoryHash": "6ba5210e534da95939251c3ccf1f30efd4fc2ce1",
+    "requiresNativeExecution": true,
+    "runningProgram": "/Applications/ChatGPT.app/Contents/MacOS/ChatGPT",
+    "runningPid": 7331,
+    "runningProcessArchitecture": null,
+    "runningProcessArchitectureMethod": null,
+    "runningProcessArchitectureStatus": "partial"
+  },
+  "plugin": {
+    "version": null,
+    "archiveSha256": null,
+    "contentDigest": null,
+    "installed": false,
+    "marketplace": null
+  },
+  "modelObserved": null,
+  "runId": null,
+  "artifactSha256": null,
+  "journeyIdentities": {
+    "explicitDiscovery": null,
+    "implicitDiscovery": null,
+    "interrupted": null,
+    "resumed": null,
+    "restarted": null
+  },
+  "keyboardSelection": null,
+  "checks": [
+    {
+      "id": "MAC-001",
+      "status": "partial",
+      "executed": true,
+      "summary": "The launch registration and thin x86_64 executable were captured, but this historical baseline did not inspect the live process CPU type through proc_pidinfo.",
+      "evidenceRefs": ["read-only host capture at 2026-07-22T08:11:46Z"]
+    },
+    {
+      "id": "MAC-002",
+      "status": "partial",
+      "executed": true,
+      "summary": "Host and ChatGPT identity are recorded; candidate plugin, model, and native run identities remain unrecorded.",
+      "evidenceRefs": ["read-only host capture at 2026-07-22T08:11:46Z"]
+    },
+    {
+      "id": "MAC-003",
+      "status": "not_run",
+      "executed": false,
+      "summary": "Exact-candidate installation and explicit and implicit discovery have not been executed.",
+      "evidenceRefs": []
+    },
+    {
+      "id": "MAC-004",
+      "status": "not_run",
+      "executed": false,
+      "summary": "End-to-end interrupt, resume, remediation, and completion have not been executed.",
+      "evidenceRefs": []
+    },
+    {
+      "id": "MAC-005",
+      "status": "not_run",
+      "executed": false,
+      "summary": "Inline widget, keyboard, VoiceOver, degraded-state, and reconciliation checks have not been executed.",
+      "evidenceRefs": []
+    },
+    {
+      "id": "MAC-006",
+      "status": "partial",
+      "executed": true,
+      "summary": "A secret-safe host baseline exists; journey screenshots, logs, artifact digest, and completed checklist remain absent.",
+      "evidenceRefs": ["intel-host-baseline.json"]
+    }
+  ],
+  "attachments": [],
+  "observedAt": "2026-07-22T08:11:46Z",
+  "tester": "Codex read-only host discovery",
+  "limitations": [
+    "The plugin was not installed when this baseline was captured.",
+    "No native desktop interaction was performed during baseline capture.",
+    "The historical baseline recorded executable architecture, not an independent live-process architecture probe; recapture with the current capture-host.sh before claiming MAC-001 pass.",
+    "The running PID is transient and must be recaptured for the final evidence manifest.",
+    "At the time of this initial baseline capture, the release verifier accepted only the Apple Silicon gate. The repository verifier was subsequently updated; this file intentionally remains a historical pre-journey snapshot."
+  ]
+}

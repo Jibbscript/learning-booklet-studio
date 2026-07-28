@@ -1,0 +1,51 @@
+{
+  "requiresOptions": true,
+  "options": [
+    {
+      "id": "memory-lab",
+      "name": "Memory Lab",
+      "rationale": "Makes representations, slices, and allocation tradeoffs visible before introducing benchmark claims.",
+      "recommended": true,
+      "visualDirection": {
+        "thesis": "Inspect the bytes, then reason about the cost.",
+        "layout": "dark technical workbench with a persistent byte inspector and guided experiment cards",
+        "palette": ["#101419", "#1d2730", "#59d8b5", "#f6c85f", "#f5f7fa"],
+        "type": "system sans for prose with a legible monospace specimen layer",
+        "interaction": "editable inputs update byte views and cost annotations with explicit reset controls",
+        "tradeoff": "denser than a conventional article, but strongest for causal performance reasoning"
+      }
+    },
+    {
+      "id": "search-map",
+      "name": "Search Map",
+      "rationale": "Organizes APIs around the learner's task and makes choosing an operation feel like navigating a map.",
+      "recommended": false,
+      "visualDirection": {
+        "thesis": "Choose a path from intent to operation.",
+        "layout": "bright editorial map with branching task paths and compact comparison panels",
+        "palette": ["#fffaf0", "#12355b", "#ef8354", "#2d6a4f", "#242424"],
+        "type": "humanist serif headings with neutral sans body copy",
+        "interaction": "a task chooser reveals matching APIs, constraints, and worked examples",
+        "tradeoff": "highly approachable, but less suited to close inspection of memory behavior"
+      }
+    },
+    {
+      "id": "benchmark-dossier",
+      "name": "Benchmark Dossier",
+      "rationale": "Teaches skepticism by treating every speed statement as a claim with workload and environment evidence.",
+      "recommended": false,
+      "visualDirection": {
+        "thesis": "A number is not a conclusion without its workload.",
+        "layout": "paper-like evidence dossier with claim cards, annotated charts, and confidence stamps",
+        "palette": ["#f2efe8", "#252525", "#9b2226", "#005f73", "#ca6702"],
+        "type": "editorial slab headings with tabular numerals and restrained body text",
+        "interaction": "learners vary workload assumptions and see which conclusions remain supported",
+        "tradeoff": "excellent for benchmark literacy, but gives less space to API exploration"
+      }
+    }
+  ],
+  "recommendationId": "memory-lab",
+  "selection": null,
+  "finalVisualDirection": null,
+  "rejectedOptionIds": []
+}

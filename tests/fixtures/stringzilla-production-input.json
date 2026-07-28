@@ -1,0 +1,22 @@
+{
+  "id": "artifact-production-stringzilla",
+  "kind": "production",
+  "phaseId": "P7",
+  "content": "<!doctype html><html lang=\"en\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"><title>StringZilla Memory Lab</title><style>body{font:16px system-ui;background:#101419;color:#f5f7fa}a{color:#59d8b5}:focus-visible{outline:3px solid #f6c85f}</style></head><body><main><h1>StringZilla Memory Lab</h1><p>Inspect representations before drawing performance conclusions.</p><a href=\"https://github.com/ashvardanian/StringZilla#readme\">Source notes</a><button id=\"reset\" type=\"button\">Reset experiment</button><output id=\"status\" aria-live=\"polite\">Ready</output></main><script>const b=document.querySelector('#reset'),o=document.querySelector('#status');b.addEventListener('click',()=>{o.textContent='Reset complete'});</script></body></html>",
+  "files": [
+    {
+      "path": "index.html",
+      "mimeType": "text/html"
+    }
+  ],
+  "metadata": {
+    "selfContained": true,
+    "networkRequired": false,
+    "externalRuntimeResources": [],
+    "externalLinks": [
+      "https://github.com/ashvardanian/StringZilla#readme"
+    ],
+    "telemetry": false,
+    "placeholders": []
+  }
+}

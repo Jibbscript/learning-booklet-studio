@@ -1,0 +1,42 @@
+{
+  "claims": [
+    {
+      "claimId": "claim-api-surface",
+      "sourceRefs": ["source:stringzilla-readme#claim-api-surface"],
+      "instructionHome": "operations/search-and-split",
+      "qualification": "Names and semantics are version-scoped."
+    },
+    {
+      "claimId": "claim-performance",
+      "sourceRefs": ["source:stringzilla-readme#claim-performance"],
+      "instructionHome": "reasoning/benchmark-boundaries",
+      "qualification": "No universal speed claim is permitted."
+    }
+  ],
+  "objectives": [
+    {
+      "objectiveId": "obj-1",
+      "statement": "Choose a suitable search or split operation for a stated input and boundary condition.",
+      "instruction": "operations/search-and-split",
+      "practice": "lab-operation-picker",
+      "assessment": "check-operation-rationale",
+      "test": "test-objective-1"
+    },
+    {
+      "objectiveId": "obj-2",
+      "statement": "Critique a benchmark conclusion using its workload and environment evidence.",
+      "instruction": "reasoning/benchmark-boundaries",
+      "practice": "lab-benchmark-lens",
+      "assessment": "check-benchmark-claim",
+      "test": "test-objective-2"
+    },
+    {
+      "objectiveId": "obj-3",
+      "statement": "Explain one copy-versus-view tradeoff without inventing an implementation guarantee.",
+      "instruction": "memory/representations",
+      "practice": "lab-slice-cost",
+      "assessment": "check-representation-tradeoff",
+      "test": "test-objective-3"
+    }
+  ]
+}

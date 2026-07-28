@@ -1,0 +1,4 @@
+interface:
+  display_name: "Build Learning Booklet"
+  short_description: "Research, build, and verify an interactive learning booklet"
+  default_prompt: "Use $build-learning-booklet to turn my technical topic into a verified learning booklet."
