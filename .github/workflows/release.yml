@@ -36,7 +36,7 @@ jobs:
       - name: Set up release Node.js
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
-          node-version: "26"
+          node-version: "26.0.0"
           cache: npm
 
       - name: Validate tag and draft release
@@ -114,10 +114,18 @@ jobs:
 
       - name: Extract evidence assets
         run: |
+          set -o pipefail
+          assert_safe_archive() {
+            tar -tzf "$1" | node -e '
+              const entries = require("fs").readFileSync(0, "utf8").split(/\r?\n/).filter(Boolean);
+              const unsafe = entries.some((entry) => entry.startsWith("/") || entry.split("/").includes(".."));
+              process.exit(unsafe ? 1 : 0);
+            '
+          }
           for kind in automated sol native-macos-intel; do
             archive="$RUNNER_TEMP/release-evidence-downloads/learning-booklet-studio-$VERSION-$kind-evidence.tar.gz"
             destination="$RUNNER_TEMP/release-evidence/$kind"
-            if tar -tzf "$archive" | awk 'BEGIN { bad=0 } /(^\\/|(^|\\/)\\.\\.($|\\/))/ { bad=1 } END { exit bad ? 0 : 1 }'; then
+            if ! assert_safe_archive "$archive"; then
               echo "Unsafe path in evidence archive: $archive" >&2
               exit 1
             fi
@@ -126,7 +134,7 @@ jobs:
           done
           apple_archive="$RUNNER_TEMP/release-evidence-downloads/learning-booklet-studio-$VERSION-native-macos-apple-silicon-evidence.tar.gz"
           if test -f "$apple_archive"; then
-            if tar -tzf "$apple_archive" | awk 'BEGIN { bad=0 } /(^\\/|(^|\\/)\\.\\.($|\\/))/ { bad=1 } END { exit bad ? 0 : 1 }'; then
+            if ! assert_safe_archive "$apple_archive"; then
               echo "::warning::Ignoring unsafe optional Apple Silicon evidence archive; production remains governed by required gates."
             else
               mkdir -p "$RUNNER_TEMP/release-evidence/native-macos-apple-silicon"

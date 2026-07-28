@@ -102,7 +102,7 @@ jobs:
       - name: Set up release Node.js
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
-          node-version: "26"
+          node-version: "26.0.0"
           cache: npm
 
       - name: Install exact dependencies
