@@ -44,11 +44,20 @@ jobs:
           VERSION="$(node -p "JSON.parse(require('fs').readFileSync('package.json')).version")"
           test "$RELEASE_TAG" = "v$VERSION"
           test "$(git rev-parse HEAD)" = "$(git rev-list -n 1 "$RELEASE_TAG")"
-          release_json="$(curl --fail-with-body --silent --show-error \
+          releases_json="$(curl --fail-with-body --silent --show-error \
             -H "Accept: application/vnd.github+json" \
             -H "Authorization: Bearer $GH_TOKEN" \
             -H "X-GitHub-Api-Version: 2022-11-28" \
-            "$GITHUB_API_URL/repos/$GITHUB_REPOSITORY/releases/tags/$RELEASE_TAG")"
+            "$GITHUB_API_URL/repos/$GITHUB_REPOSITORY/releases?per_page=100")"
+          release_json="$(printf '%s' "$releases_json" | RELEASE_TAG="$RELEASE_TAG" node -e '
+            const releases = JSON.parse(require("fs").readFileSync(0, "utf8"));
+            const release = releases.find((entry) => entry.tag_name === process.env.RELEASE_TAG && entry.draft);
+            if (!release) {
+              console.error(`No draft release found for ${process.env.RELEASE_TAG}.`);
+              process.exit(1);
+            }
+            process.stdout.write(JSON.stringify(release));
+          ')"
           test "$(printf '%s' "$release_json" | node -pe 'JSON.parse(require("fs").readFileSync(0, "utf8")).draft')" = "true"
           RELEASE_ID="$(printf '%s' "$release_json" | node -pe 'JSON.parse(require("fs").readFileSync(0, "utf8")).id')"
           printf 'VERSION=%s\n' "$VERSION" >> "$GITHUB_ENV"
