@@ -20,7 +20,7 @@ concurrency:
 jobs:
   release:
     name: Verify and publish
-    runs-on: ubuntu-latest
+    runs-on: ${{ fromJSON(vars.LBS_RUNNER_LABELS || '["ubuntu-latest"]') }}
     timeout-minutes: 30
     environment: production
     env:
@@ -60,7 +60,11 @@ jobs:
         run: npm test
 
       - name: Install Chromium
-        run: npx playwright install --with-deps chromium
+        run: npx playwright install chromium
+
+      - name: Install Chromium system dependencies
+        if: runner.os == 'Linux'
+        run: npx playwright install-deps chromium
 
       - name: Run browser checks
         run: npm run test:e2e
