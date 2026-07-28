@@ -105,6 +105,16 @@ jobs:
           node-version: "26.0.0"
           cache: npm
 
+      - name: Activate evidence-bound Intel release toolchain
+        if: runner.os == 'macOS' && runner.arch == 'X64'
+        env:
+          RELEASE_NODE_BIN: ${{ vars.LBS_RELEASE_NODE_BIN || '/usr/local/bin/node' }}
+        run: |
+          test -x "$RELEASE_NODE_BIN"
+          test "$("$RELEASE_NODE_BIN" -p 'process.version')" = "v26.0.0"
+          test "$("$RELEASE_NODE_BIN" -p 'process.versions.zlib')" = "1.2.12"
+          echo "$(dirname "$RELEASE_NODE_BIN")" >> "$GITHUB_PATH"
+
       - name: Install exact dependencies
         run: npm ci
 

@@ -39,6 +39,17 @@ jobs:
           node-version: "26.0.0"
           cache: npm
 
+      - name: Activate evidence-bound Intel release toolchain
+        env:
+          RELEASE_NODE_BIN: ${{ vars.LBS_RELEASE_NODE_BIN || '/usr/local/bin/node' }}
+        run: |
+          test "$RUNNER_OS" = "macOS"
+          test "$RUNNER_ARCH" = "X64"
+          test -x "$RELEASE_NODE_BIN"
+          test "$("$RELEASE_NODE_BIN" -p 'process.version')" = "v26.0.0"
+          test "$("$RELEASE_NODE_BIN" -p 'process.versions.zlib')" = "1.2.12"
+          echo "$(dirname "$RELEASE_NODE_BIN")" >> "$GITHUB_PATH"
+
       - name: Validate tag and draft release
         run: |
           VERSION="$(node -p "JSON.parse(require('fs').readFileSync('package.json')).version")"
