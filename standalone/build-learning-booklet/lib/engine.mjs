@@ -292,25 +292,36 @@ function openCriticalConflicts(state) {
   );
 }
 
+function requiredIntentEntry(state, field) {
+  const direct = state.intent.fields[field];
+  if (direct || field !== "mandatoryConcepts") return direct;
+  const scope = state.intent.fields.scope;
+  if (!scope?.value || typeof scope.value !== "object" || Array.isArray(scope.value)) return undefined;
+  const value = scope.value.include ?? scope.value.mandatory;
+  return value === undefined ? undefined : { ...scope, value };
+}
+
+function intentValueIsMissing(value) {
+  return value === undefined || value === null || value === "" || (Array.isArray(value) && value.length === 0);
+}
+
 export function getMissingIntentFields(state) {
   assertRunState(state);
   return REQUIRED_INTENT_FIELDS.filter((field) => {
-    const entry = state.intent.fields[field];
-    return !entry || entry.value === undefined || entry.value === null || entry.value === "";
+    const entry = requiredIntentEntry(state, field);
+    return !entry || intentValueIsMissing(entry.value);
   });
 }
 
 export function getUnauthoritativeIntentFields(state) {
   assertRunState(state);
   return REQUIRED_INTENT_FIELDS.filter((field) => {
-    const entry = state.intent.fields[field];
+    const entry = requiredIntentEntry(state, field);
     return (
       !entry ||
       !entry.locked ||
       !AUTHORITATIVE_INTENT_ORIGINS.includes(entry.origin) ||
-      entry.value === undefined ||
-      entry.value === null ||
-      entry.value === ""
+      intentValueIsMissing(entry.value)
     );
   });
 }

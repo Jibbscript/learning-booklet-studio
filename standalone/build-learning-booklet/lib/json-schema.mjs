@@ -12,15 +12,29 @@ function pointer(root, fragment) {
 }
 
 export function validateArtifact(artifact, schema, relatedSchemas = []) {
-  const roots = new Map([schema, ...relatedSchemas].filter(Boolean).map((item) => [item.$id, item]));
+  const roots = new Map(
+    [schema, ...relatedSchemas]
+      .filter((item) => item?.$id)
+      .map((item) => [item.$id, item]),
+  );
   const errors = [];
+  function referencedRoot(identifier, root) {
+    if (!identifier) return root;
+    if (roots.has(identifier)) return roots.get(identifier);
+    if (!root?.$id) return undefined;
+    try {
+      return roots.get(new URL(identifier, root.$id).href);
+    } catch {
+      return undefined;
+    }
+  }
   function visit(value, rule, instancePath = "", root = schema) {
     if (rule === true) return;
     if (rule === false) { errors.push({ instancePath, keyword: "false schema", message: "must not be present" }); return; }
     if (!rule || typeof rule !== "object") return;
     if (rule.$ref) {
       const [identifier, fragment = ""] = rule.$ref.split("#");
-      const targetRoot = identifier ? roots.get(identifier) : root;
+      const targetRoot = referencedRoot(identifier, root);
       const target = targetRoot && (fragment ? pointer(targetRoot, fragment) : targetRoot);
       if (!target) errors.push({ instancePath, keyword: "$ref", message: `cannot resolve ${rule.$ref}` });
       else visit(value, target, instancePath, targetRoot);

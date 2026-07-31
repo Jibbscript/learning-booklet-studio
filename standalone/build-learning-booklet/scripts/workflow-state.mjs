@@ -1,12 +1,15 @@
 #!/usr/bin/env node
 
-import { access, mkdir, readFile, rename, stat, writeFile } from "node:fs/promises";
+import { access, mkdir, readFile, realpath, rename, rmdir, stat, writeFile } from "node:fs/promises";
 import { randomUUID } from "node:crypto";
 import { homedir } from "node:os";
 import path from "node:path";
 import process from "node:process";
+import { setTimeout as delay } from "node:timers/promises";
 
 const engineUrl = new URL("../lib/index.mjs", import.meta.url);
+const STATE_LOCK_RETRY_MS = 25;
+const STATE_LOCK_TIMEOUT_MS = 5_000;
 
 function fail(message, details = {}, exitCode = 2) {
   console.error(`${JSON.stringify({ status: "error", message, ...details }, null, 2)}\n`);
@@ -63,12 +66,36 @@ async function atomicWriteJson(file, value) {
   await rename(temporary, file);
 }
 
+async function withStateLock(stateFile, operation) {
+  const lockDirectory = `${stateFile}.lock`;
+  const deadline = Date.now() + STATE_LOCK_TIMEOUT_MS;
+  while (true) {
+    try {
+      await mkdir(lockDirectory);
+      break;
+    } catch (error) {
+      if (error?.code !== "EEXIST") throw error;
+      if (Date.now() >= deadline) {
+        const timeout = new Error(`Timed out waiting for the state lock at ${lockDirectory}.`);
+        timeout.code = "STATE_LOCK_TIMEOUT";
+        throw timeout;
+      }
+      await delay(STATE_LOCK_RETRY_MS);
+    }
+  }
+  try {
+    return await operation();
+  } finally {
+    await rmdir(lockDirectory);
+  }
+}
+
 function stateFileFrom(run) {
   const resolved = path.resolve(run);
   return path.basename(resolved) === "run-state.json" ? resolved : path.join(resolved, "run-state.json");
 }
 
-function safeRunRoot(workspace, requestedRun, runId) {
+async function safeRunRoot(workspace, requestedRun, runId) {
   const root = requestedRun
     ? path.resolve(requestedRun)
     : path.join(workspace, ".learning-booklet", "runs", runId);
@@ -81,6 +108,34 @@ function safeRunRoot(workspace, requestedRun, runId) {
     root === homedir()
   ) {
     fail("The run root must be a dedicated directory inside the workspace.", { workspace, runRoot: root });
+  }
+
+  const canonicalWorkspace = await realpath(workspace);
+  let existingAncestor = root;
+  let canonicalAncestor;
+  while (!canonicalAncestor) {
+    try {
+      canonicalAncestor = await realpath(existingAncestor);
+    } catch (error) {
+      if (error?.code !== "ENOENT") throw error;
+      const parent = path.dirname(existingAncestor);
+      if (parent === existingAncestor) throw error;
+      existingAncestor = parent;
+    }
+  }
+  const canonicalRoot = path.resolve(canonicalAncestor, path.relative(existingAncestor, root));
+  const canonicalRelative = path.relative(canonicalWorkspace, canonicalRoot);
+  if (
+    !canonicalRelative ||
+    canonicalRelative.startsWith(`..${path.sep}`) ||
+    canonicalRelative === ".." ||
+    path.isAbsolute(canonicalRelative)
+  ) {
+    fail("The run root must resolve inside the workspace.", {
+      workspace,
+      runRoot: root,
+      resolvedRunRoot: canonicalRoot,
+    });
   }
   return root;
 }
@@ -154,7 +209,7 @@ async function create(engine, options) {
   if (!workspaceStat.isDirectory()) fail("The workspace must be a directory.", { workspace });
 
   const runId = safeRunId(options["run-id"]);
-  const runRoot = safeRunRoot(workspace, options.run, runId);
+  const runRoot = await safeRunRoot(workspace, options.run, runId);
   const stateFile = path.join(runRoot, "run-state.json");
   try {
     await access(stateFile);
@@ -218,7 +273,7 @@ async function resume(engine, options) {
   }
 
   const runId = safeRunId(options["run-id"]);
-  const runRoot = safeRunRoot(workspace, options["child-run"], runId);
+  const runRoot = await safeRunRoot(workspace, options["child-run"], runId);
   const stateFile = path.join(runRoot, "run-state.json");
   try {
     await access(stateFile);
@@ -258,7 +313,6 @@ async function apply(engine, options) {
     usage("apply requires --run, --command, and --payload");
   }
   const stateFile = stateFileFrom(options.run);
-  const state = await readJson(stateFile, "run state");
   if (options["expected-version"] !== undefined) {
     const expected = Number(options["expected-version"]);
     if (!Number.isInteger(expected) || expected < 0) usage("--expected-version must be a nonnegative integer");
@@ -281,18 +335,29 @@ async function apply(engine, options) {
     command.expectedStateVersion = Number(options["expected-version"]);
   }
 
+  let state;
   let outcome;
-  try {
-    outcome = engine.applyCommand(state, command, { now: suppliedTime(options.now) });
-  } catch (error) {
+  let nextState;
+  let commandError;
+  await withStateLock(stateFile, async () => {
+    state = JSON.parse(await readFile(stateFile, "utf8"));
+    try {
+      outcome = engine.applyCommand(state, command, { now: suppliedTime(options.now) });
+    } catch (error) {
+      commandError = error;
+      return;
+    }
+    nextState = outcome?.state ?? outcome;
+    if (nextState.stateVersion !== state.stateVersion) await atomicWriteJson(stateFile, nextState);
+  });
+  if (commandError) {
+    const error = commandError;
     fail("The workflow command was rejected.", {
       code: error.code ?? "ENGINE_ERROR",
       reason: error.message,
       details: error.details ?? {},
     }, 1);
   }
-  const nextState = outcome?.state ?? outcome;
-  if (nextState.stateVersion !== state.stateVersion) await atomicWriteJson(stateFile, nextState);
   process.stdout.write(`${JSON.stringify({
     ...summary(nextState, stateFile),
     command: command.type,

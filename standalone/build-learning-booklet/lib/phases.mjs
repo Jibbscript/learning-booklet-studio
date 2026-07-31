@@ -56,10 +56,18 @@ export const INTENT_ORIGINS = Object.freeze([
 
 export const REQUIRED_INTENT_FIELDS = Object.freeze([
   "topic",
+  "topicDomain",
+  "userRequest",
   "learner",
+  "prerequisites",
+  "desiredLearningOutcomes",
   "depth",
   "duration",
-  "scope",
+  "mandatoryConcepts",
+  "desiredInteractions",
+  "assessmentStrategy",
+  "dependencyPolicy",
+  "offlineRequirement",
 ]);
 
 export const AUTHORITATIVE_INTENT_ORIGINS = Object.freeze(["user", "researched"]);

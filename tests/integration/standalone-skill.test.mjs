@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { execFile } from "node:child_process";
-import { cp, mkdtemp, mkdir, readFile, readdir, rm } from "node:fs/promises";
+import { cp, mkdtemp, mkdir, readFile, readdir, rm, symlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { promisify } from "node:util";
@@ -80,4 +80,124 @@ test("bundled schema validator needs no installed package", async () => {
   const invalid = validateArtifact({ origin: "invented", confidence: 2 }, schema);
   assert.equal(invalid.valid, false);
   assert.ok(invalid.errors.length >= 5);
+});
+
+test("bundled schema validator resolves contract references relative to the current schema", async () => {
+  const contractsDirectory = path.join(source, "contracts");
+  const schemas = await Promise.all(
+    (await readdir(contractsDirectory))
+      .filter((file) => file.endsWith(".schema.json"))
+      .map(async (file) => JSON.parse(await readFile(path.join(contractsDirectory, file), "utf8"))),
+  );
+  const runSchema = schemas.find((schema) => schema.$id.endsWith("/run-state.schema.json"));
+  const { createRunState } = await import(path.join(source, "lib/index.mjs"));
+  const { validateArtifact } = await import(path.join(source, "lib/json-schema.mjs"));
+  const state = createRunState({
+    runId: "schema-reference-test",
+    mode: "manifest_only",
+    now: "2026-07-31T00:00:00.000Z",
+  });
+
+  const validation = validateArtifact(state, runSchema, schemas);
+  assert.equal(validation.valid, true, JSON.stringify(validation.errors, null, 2));
+});
+
+test("manifest-only intent requirements cover every non-derived compiler input", async () => {
+  const { createRunState, getMissingIntentFields } = await import(path.join(source, "lib/index.mjs"));
+  const state = createRunState({
+    runId: "manifest-requirements-test",
+    mode: "manifest_only",
+    intent: {
+      topic: "State machines",
+      learner: "Engineers",
+      depth: "Intermediate",
+      duration: "30 minutes",
+      scope: { include: ["Transitions"] },
+    },
+    now: "2026-07-31T00:00:00.000Z",
+  });
+
+  assert.deepEqual(getMissingIntentFields(state), [
+    "topicDomain",
+    "userRequest",
+    "prerequisites",
+    "desiredLearningOutcomes",
+    "desiredInteractions",
+    "assessmentStrategy",
+    "dependencyPolicy",
+    "offlineRequirement",
+  ]);
+});
+
+test("state creation rejects a run root redirected outside the workspace", async (t) => {
+  const temporary = await mkdtemp(path.join(tmpdir(), "learning-booklet-symlink-"));
+  t.after(() => rm(temporary, { recursive: true, force: true }));
+  const workspace = path.join(temporary, "workspace");
+  const outside = path.join(temporary, "outside");
+  await Promise.all([mkdir(workspace), mkdir(outside)]);
+  await symlink(outside, path.join(workspace, ".learning-booklet"), "dir");
+
+  const script = path.join(source, "scripts/workflow-state.mjs");
+  await assert.rejects(
+    execFileAsync(process.execPath, [
+      script,
+      "create",
+      "--workspace",
+      workspace,
+      "--mode",
+      "manifest_only",
+      "--run-id",
+      "redirected",
+    ]),
+    (error) => {
+      assert.match(error.stderr, /run root must resolve inside the workspace/i);
+      return true;
+    },
+  );
+  await assert.rejects(readFile(path.join(outside, "runs/redirected/run-state.json"), "utf8"));
+});
+
+test("parallel state commands serialize without losing updates", async (t) => {
+  const temporary = await mkdtemp(path.join(tmpdir(), "learning-booklet-lock-"));
+  t.after(() => rm(temporary, { recursive: true, force: true }));
+  const workspace = path.join(temporary, "workspace");
+  const run = path.join(workspace, "run");
+  await mkdir(workspace);
+
+  const script = path.join(source, "scripts/workflow-state.mjs");
+  await execFileAsync(process.execPath, [
+    script,
+    "create",
+    "--workspace",
+    workspace,
+    "--mode",
+    "manifest_only",
+    "--run",
+    run,
+  ]);
+  const before = JSON.parse(await readFile(path.join(run, "run-state.json"), "utf8"));
+  const commandCount = 8;
+  const payloads = await Promise.all(Array.from({ length: commandCount }, async (_, index) => {
+    const payload = path.join(temporary, `payload-${index}.json`);
+    await writeFile(payload, JSON.stringify({ patch: { [`parallelField${index}`]: `value-${index}` } }));
+    return payload;
+  }));
+
+  await Promise.all(payloads.map((payload) => execFileAsync(process.execPath, [
+    script,
+    "apply",
+    "--run",
+    run,
+    "--command",
+    "intent.patch",
+    "--payload",
+    payload,
+  ])));
+
+  const after = JSON.parse(await readFile(path.join(run, "run-state.json"), "utf8"));
+  assert.equal(after.stateVersion, before.stateVersion + commandCount);
+  assert.equal(after.events.length, before.events.length + commandCount);
+  for (let index = 0; index < commandCount; index += 1) {
+    assert.equal(after.intent.fields[`parallelField${index}`].value, `value-${index}`);
+  }
 });
