@@ -108,6 +108,10 @@ The default personal marketplace is discovered at the platform's standard person
 
 Never overwrite an existing marketplace file wholesale. Preserve other entries and the marketplace's configured name.
 
+## Enterprise stand-alone skill
+
+Organizations that permit plain Agent Skill directories but prohibit plugin or graphical integrations can install the self-encapsulated edition from [`standalone/build-learning-booklet`](standalone/build-learning-booklet). It bundles the prompt, host metadata, phase guidance, schemas, zero-dependency workflow engine, validators, audits, and HTML template beneath one relocatable directory. See [`standalone/README.md`](standalone/README.md) for installation and verification.
+
 ## Skill-only use
 
 The graphical workspace is optional. With MCP app tools unavailable, invoke `$build-learning-booklet` and provide a topic, source, or learning goal. The skill records equivalent local state, presents material decisions in chat, and performs the same phase gates. The three terminal modes are:

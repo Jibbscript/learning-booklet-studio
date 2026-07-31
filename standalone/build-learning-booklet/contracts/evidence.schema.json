@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://learning-booklet.studio/contracts/evidence.schema.json",
+  "title": "Verification evidence",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["id", "phaseId", "gateId", "status", "executed", "critical", "stale", "recordedAt"],
+  "properties": {
+    "id": { "type": "string", "minLength": 1 },
+    "phaseId": {
+      "enum": ["I0", "P0", "P1", "P2", "P3", "P4", "P5", "P6", "P7", "P8", "P9", "P10"]
+    },
+    "gateId": { "type": "string", "minLength": 1 },
+    "status": { "enum": ["pass", "fail", "partial", "not_run", "not_applicable"] },
+    "executed": { "type": "boolean" },
+    "critical": { "type": "boolean" },
+    "artifactId": { "type": "string" },
+    "artifactKind": {
+      "oneOf": [
+        { "enum": ["intent", "charter", "research", "learning", "ia", "interactions", "visual", "technical-plan", "production", "verification", "adversarial", "release"] },
+        { "type": "null" }
+      ]
+    },
+    "artifactHash": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" },
+    "details": {},
+    "sourceRefs": {
+      "type": "array",
+      "items": { "type": "string" },
+      "uniqueItems": true
+    },
+    "stale": { "type": "boolean" },
+    "staleReason": { "oneOf": [{ "type": "string" }, { "type": "null" }] },
+    "recordedAt": { "type": "string", "format": "date-time" }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "status": { "const": "pass" } } },
+      "then": {
+        "required": ["artifactId", "artifactHash"],
+        "properties": { "executed": { "const": true } }
+      }
+    },
+    {
+      "if": { "properties": { "status": { "const": "not_run" } } },
+      "then": { "properties": { "executed": { "const": false } } }
+    }
+  ]
+}

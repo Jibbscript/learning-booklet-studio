@@ -1,0 +1,561 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="A self-contained interactive technical learning booklet starter.">
+  <title>Technical Learning Booklet</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #172033;
+      --muted: #566176;
+      --paper: #f7f4ec;
+      --surface: #fffdf8;
+      --line: #c7c3b8;
+      --accent: #075985;
+      --accent-soft: #e0f2fe;
+      --success: #17603a;
+      --danger: #9f1239;
+      --code: #111827;
+      --code-ink: #f8fafc;
+      --focus: #ea580c;
+      --radius: 0.55rem;
+      --shadow: 0 0.6rem 1.6rem rgb(23 32 51 / 0.09);
+      --measure: 72ch;
+      font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+
+    html {
+      background: var(--paper);
+      color: var(--ink);
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      line-height: 1.65;
+    }
+
+    a { color: var(--accent); }
+
+    a:hover { text-decoration-thickness: 0.15em; }
+
+    :focus-visible {
+      outline: 0.2rem solid var(--focus);
+      outline-offset: 0.2rem;
+    }
+
+    .skip-link {
+      position: fixed;
+      z-index: 20;
+      top: 0.5rem;
+      left: 0.5rem;
+      padding: 0.65rem 0.9rem;
+      border-radius: var(--radius);
+      background: var(--ink);
+      color: white;
+      transform: translateY(-180%);
+    }
+
+    .skip-link:focus { transform: translateY(0); }
+
+    .booklet-header {
+      padding: clamp(2.5rem, 8vw, 6rem) max(1rem, calc((100vw - 76rem) / 2));
+      background: var(--ink);
+      color: white;
+    }
+
+    .eyebrow {
+      margin: 0 0 0.6rem;
+      color: #bae6fd;
+      font-size: 0.78rem;
+      font-weight: 750;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    h1, h2, h3 {
+      line-height: 1.15;
+      text-wrap: balance;
+    }
+
+    h1 {
+      max-width: 18ch;
+      margin: 0;
+      font-size: clamp(2.3rem, 7vw, 5rem);
+      letter-spacing: -0.045em;
+    }
+
+    .promise {
+      max-width: 58ch;
+      margin: 1.3rem 0 0;
+      color: #e2e8f0;
+      font-size: clamp(1rem, 2vw, 1.25rem);
+    }
+
+    .app-nav {
+      position: sticky;
+      z-index: 10;
+      top: 0;
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      overflow-x: auto;
+      padding: 0.65rem max(1rem, calc((100vw - 76rem) / 2));
+      border-bottom: 1px solid var(--line);
+      background: rgb(255 253 248 / 0.96);
+      backdrop-filter: blur(0.5rem);
+    }
+
+    .app-nav a {
+      flex: 0 0 auto;
+      padding: 0.35rem 0.2rem;
+      font-size: 0.9rem;
+      font-weight: 700;
+      text-underline-offset: 0.25em;
+    }
+
+    .progress-wrap {
+      display: grid;
+      gap: 0.15rem;
+      min-width: 8rem;
+      margin-inline-start: auto;
+      color: var(--muted);
+      font-size: 0.75rem;
+    }
+
+    progress {
+      width: 100%;
+      height: 0.45rem;
+      accent-color: var(--accent);
+    }
+
+    main {
+      width: min(100% - 2rem, 76rem);
+      margin-inline: auto;
+      padding-block: 1rem 5rem;
+    }
+
+    section {
+      scroll-margin-top: 5rem;
+      padding-block: clamp(2.5rem, 6vw, 5rem);
+      border-bottom: 1px solid var(--line);
+    }
+
+    section > :not(.wide) {
+      max-width: var(--measure);
+    }
+
+    h2 {
+      margin: 0 0 1rem;
+      font-size: clamp(1.75rem, 4vw, 2.8rem);
+      letter-spacing: -0.025em;
+    }
+
+    h3 { margin-top: 2rem; }
+
+    .lede {
+      color: var(--muted);
+      font-size: 1.1rem;
+    }
+
+    .objective-grid,
+    .lab-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 1rem;
+      max-width: none;
+    }
+
+    .card,
+    .callout,
+    .quiz {
+      padding: clamp(1rem, 3vw, 1.5rem);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--surface);
+      box-shadow: var(--shadow);
+    }
+
+    .card h3 { margin-top: 0; }
+
+    .callout {
+      border-inline-start: 0.35rem solid var(--accent);
+      background: var(--accent-soft);
+      box-shadow: none;
+    }
+
+    .diagram {
+      width: 100%;
+      height: auto;
+      margin-block: 1.5rem;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: white;
+    }
+
+    pre {
+      max-width: 100%;
+      overflow-x: auto;
+      padding: 1rem;
+      border-radius: var(--radius);
+      background: var(--code);
+      color: var(--code-ink);
+      line-height: 1.5;
+      tab-size: 2;
+    }
+
+    code, kbd {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 0.92em;
+    }
+
+    .lab-controls {
+      display: grid;
+      gap: 0.75rem;
+    }
+
+    input[type="range"] { width: 100%; }
+
+    button {
+      min-height: 2.75rem;
+      padding: 0.65rem 1rem;
+      border: 2px solid var(--accent);
+      border-radius: var(--radius);
+      background: var(--accent);
+      color: white;
+      font: inherit;
+      font-weight: 750;
+      cursor: pointer;
+    }
+
+    button:hover { filter: brightness(0.92); }
+
+    .secondary {
+      background: transparent;
+      color: var(--accent);
+    }
+
+    output,
+    .feedback {
+      display: block;
+      min-height: 3rem;
+      padding: 0.8rem;
+      border-radius: var(--radius);
+      background: #eef2f7;
+    }
+
+    fieldset {
+      margin: 0 0 1rem;
+      padding: 0;
+      border: 0;
+    }
+
+    legend { margin-bottom: 0.75rem; font-weight: 750; }
+
+    .choice {
+      display: flex;
+      gap: 0.55rem;
+      align-items: start;
+      margin-block: 0.65rem;
+    }
+
+    .choice input { margin-top: 0.4rem; }
+
+    .feedback[data-state="correct"] {
+      border-inline-start: 0.35rem solid var(--success);
+      color: var(--success);
+    }
+
+    .feedback[data-state="incorrect"] {
+      border-inline-start: 0.35rem solid var(--danger);
+      color: var(--danger);
+    }
+
+    details {
+      max-width: var(--measure);
+      padding-block: 0.75rem;
+      border-bottom: 1px solid var(--line);
+    }
+
+    summary { cursor: pointer; font-weight: 750; }
+
+    .booklet-footer {
+      padding: 2rem max(1rem, calc((100vw - 76rem) / 2));
+      background: #e7e3d9;
+      color: var(--muted);
+    }
+
+    @media (max-width: 44rem) {
+      .objective-grid,
+      .lab-grid { grid-template-columns: 1fr; }
+
+      .progress-wrap { display: none; }
+
+      .app-nav { scroll-padding-inline: 1rem; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        scroll-behavior: auto !important;
+        animation-duration: 0.001ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.001ms !important;
+      }
+    }
+
+    @media print {
+      :root { --paper: white; --surface: white; --ink: black; --muted: #333; }
+
+      .app-nav,
+      .lab-controls,
+      button { display: none !important; }
+
+      .booklet-header {
+        padding: 1rem 0;
+        background: white;
+        color: black;
+      }
+
+      .promise { color: #333; }
+
+      main { width: 100%; padding: 0; }
+
+      section { break-inside: avoid; padding-block: 1rem; }
+
+      .card,
+      .callout,
+      .quiz { box-shadow: none; }
+
+      a { color: black; }
+    }
+  </style>
+</head>
+<body>
+  <a class="skip-link" href="#main-content">Skip to the lesson</a>
+
+  <header class="booklet-header">
+    <p class="eyebrow">Interactive technical field guide</p>
+    <h1>From observation to mechanism</h1>
+    <p class="promise">Build a reliable mental model, test it against a small system, and carry the reasoning into a new case.</p>
+  </header>
+
+  <nav class="app-nav" aria-label="Booklet sections">
+    <a href="#orientation">Orientation</a>
+    <a href="#model">Mental model</a>
+    <a href="#laboratory">Laboratory</a>
+    <a href="#check">Knowledge check</a>
+    <a href="#glossary">Glossary</a>
+    <a href="#references">References</a>
+    <div class="progress-wrap">
+      <span id="progress-label">0 of 2 activities complete</span>
+      <progress id="lesson-progress" max="2" value="0" aria-label="Lesson activity progress"></progress>
+    </div>
+  </nav>
+
+  <main id="main-content">
+    <section id="orientation">
+      <p class="eyebrow">01 · Orientation</p>
+      <h2>Start with the learner’s job</h2>
+      <p class="lede">A technical booklet should turn facts into usable reasoning. The learner needs a motivating problem, a causal model, guided practice, and evidence that the model transfers.</p>
+      <div class="objective-grid wide">
+        <article class="card">
+          <h3>Trace</h3>
+          <p>Follow state and data through a mechanism without skipping the transformations that cause the result.</p>
+        </article>
+        <article class="card">
+          <h3>Predict</h3>
+          <p>Use the model to forecast behavior before revealing the observed output.</p>
+        </article>
+      </div>
+    </section>
+
+    <section id="model">
+      <p class="eyebrow">02 · Mental model</p>
+      <h2>Separate input, transformation, and evidence</h2>
+      <p>Mechanism-level explanations become easier to test when they expose three things: the initial state, the operation that changes it, and the observable result. A diagram should preserve those causal links rather than merely decorate the page.</p>
+      <svg class="diagram wide" viewBox="0 0 900 250" role="img" aria-labelledby="diagram-title diagram-description">
+        <title id="diagram-title">A three-stage causal model</title>
+        <desc id="diagram-description">An input state flows through a transformation and produces observable evidence. Arrows show the direction of causation.</desc>
+        <defs>
+          <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+            <path d="M0,0 L0,6 L9,3 z" fill="#075985"></path>
+          </marker>
+        </defs>
+        <g fill="#e0f2fe" stroke="#075985" stroke-width="3">
+          <rect x="40" y="65" width="210" height="115" rx="12"></rect>
+          <rect x="345" y="65" width="210" height="115" rx="12"></rect>
+          <rect x="650" y="65" width="210" height="115" rx="12"></rect>
+        </g>
+        <g fill="#172033" font-family="system-ui, sans-serif" text-anchor="middle">
+          <text x="145" y="120" font-size="24" font-weight="700">Input state</text>
+          <text x="450" y="120" font-size="24" font-weight="700">Transformation</text>
+          <text x="755" y="120" font-size="24" font-weight="700">Evidence</text>
+          <text x="145" y="150" font-size="17">Known conditions</text>
+          <text x="450" y="150" font-size="17">Causal operation</text>
+          <text x="755" y="150" font-size="17">Measured result</text>
+        </g>
+        <g stroke="#075985" stroke-width="4" marker-end="url(#arrow)">
+          <line x1="260" y1="122" x2="325" y2="122"></line>
+          <line x1="565" y1="122" x2="630" y2="122"></line>
+        </g>
+      </svg>
+      <div class="callout">
+        <strong>Model boundary:</strong> this three-part frame organizes an explanation; it does not replace topic-specific invariants, costs, failure modes, or empirical qualifications.
+      </div>
+      <h3>Worked trace</h3>
+      <pre><code>state = 2
+for step in [1, 2, 3]:
+    state = state + step
+# observations: 3, 5, 8</code></pre>
+      <p>The trace makes each transition inspectable. The final value is not a separate fact; it follows from applying the operation to the current state at each step.</p>
+    </section>
+
+    <section id="laboratory">
+      <p class="eyebrow">03 · Laboratory</p>
+      <h2>Manipulate the transformation</h2>
+      <p class="lede">Predict how many transitions are required, then move the control and compare the rendered trace with your expectation.</p>
+      <div class="lab-grid wide">
+        <div class="card lab-controls">
+          <label for="step-count">Number of transitions: <strong id="step-count-value">3</strong></label>
+          <input id="step-count" type="range" min="1" max="8" value="3" step="1">
+          <button id="record-lab" type="button" data-audit-action="lab">Record this observation</button>
+          <button id="reset-lab" class="secondary" type="button" data-audit-action="reset">Reset laboratory</button>
+        </div>
+        <div class="card">
+          <h3>Rendered trace</h3>
+          <output id="trace-output" for="step-count" aria-live="polite">Start at 0 → step 1: 1 → step 2: 3 → step 3: 6</output>
+          <p id="trace-explanation">Each transition adds the current step number. The accumulated result after 3 transitions is 6.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="check">
+      <p class="eyebrow">04 · Retrieval and transfer</p>
+      <h2>Choose the strongest explanation</h2>
+      <form id="knowledge-check" class="quiz">
+        <fieldset>
+          <legend>Why does the trace reach 6 after three transitions?</legend>
+          <label class="choice" for="answer-a">
+            <input id="answer-a" type="radio" name="answer" value="label">
+            Because the final label says 6.
+          </label>
+          <label class="choice" for="answer-b">
+            <input id="answer-b" type="radio" name="answer" value="mechanism">
+            Because the operation adds 1, then 2, then 3 to the evolving state.
+          </label>
+          <label class="choice" for="answer-c">
+            <input id="answer-c" type="radio" name="answer" value="constant">
+            Because every transition adds the same constant.
+          </label>
+        </fieldset>
+        <button type="submit" data-audit-action="quiz">Check answer</button>
+        <p id="quiz-feedback" class="feedback" aria-live="polite">Select an explanation, then check your answer.</p>
+      </form>
+    </section>
+
+    <section id="glossary">
+      <p class="eyebrow">05 · Glossary</p>
+      <h2>Terms worth retrieving</h2>
+      <details>
+        <summary>State</summary>
+        <p>The information that describes a system at a particular point in a process.</p>
+      </details>
+      <details>
+        <summary>Invariant</summary>
+        <p>A condition that remains true across the transformations covered by a mechanism.</p>
+      </details>
+      <details>
+        <summary>Transfer</summary>
+        <p>Applying a learned model to a meaningfully different problem rather than repeating a memorized example.</p>
+      </details>
+    </section>
+
+    <section id="references">
+      <p class="eyebrow">06 · References</p>
+      <h2>Follow the evidence</h2>
+      <ol>
+        <li><a href="https://developer.mozilla.org/en-US/docs/Learn_web_development/Core/Structuring_content/Structuring_documents">MDN: Document and website structure</a></li>
+        <li><a href="https://www.w3.org/WAI/WCAG22/quickref/">W3C: How to meet WCAG 2.2</a></li>
+      </ol>
+    </section>
+  </main>
+
+  <footer class="booklet-footer">
+    <p>This file contains its presentation and behavior. Reference links are optional reading and are not required for the booklet to function.</p>
+  </footer>
+
+  <script>
+    (() => {
+      "use strict";
+
+      const range = document.querySelector("#step-count");
+      const rangeValue = document.querySelector("#step-count-value");
+      const output = document.querySelector("#trace-output");
+      const explanation = document.querySelector("#trace-explanation");
+      const recordButton = document.querySelector("#record-lab");
+      const resetButton = document.querySelector("#reset-lab");
+      const quiz = document.querySelector("#knowledge-check");
+      const quizFeedback = document.querySelector("#quiz-feedback");
+      const progress = document.querySelector("#lesson-progress");
+      const progressLabel = document.querySelector("#progress-label");
+      const completed = new Set();
+
+      function renderProgress() {
+        progress.value = completed.size;
+        progressLabel.textContent = `${completed.size} of 2 activities complete`;
+      }
+
+      function renderTrace() {
+        const count = Number(range.value);
+        let state = 0;
+        const observations = ["Start at 0"];
+        for (let step = 1; step <= count; step += 1) {
+          state += step;
+          observations.push(`step ${step}: ${state}`);
+        }
+        rangeValue.textContent = String(count);
+        output.textContent = observations.join(" → ");
+        explanation.textContent = `Each transition adds the current step number. The accumulated result after ${count} ${count === 1 ? "transition is" : "transitions is"} ${state}.`;
+      }
+
+      range.addEventListener("input", renderTrace);
+      recordButton.addEventListener("click", () => {
+        completed.add("laboratory");
+        renderProgress();
+      });
+      resetButton.addEventListener("click", () => {
+        range.value = "3";
+        completed.delete("laboratory");
+        renderTrace();
+        renderProgress();
+      });
+      quiz.addEventListener("submit", (event) => {
+        event.preventDefault();
+        const selection = new FormData(quiz).get("answer");
+        if (!selection) {
+          quizFeedback.dataset.state = "incorrect";
+          quizFeedback.textContent = "Choose one explanation. Look for the option that names the operation and the changing state.";
+          return;
+        }
+        if (selection === "mechanism") {
+          completed.add("knowledge-check");
+          quizFeedback.dataset.state = "correct";
+          quizFeedback.textContent = "Correct. The outcome follows from three explicit state transitions: +1, +2, and +3.";
+        } else {
+          completed.delete("knowledge-check");
+          quizFeedback.dataset.state = "incorrect";
+          quizFeedback.textContent = "Not yet. A causal explanation must identify how each operation changes the current state.";
+        }
+        renderProgress();
+      });
+
+      renderTrace();
+      renderProgress();
+    })();
+  </script>
+</body>
+</html>

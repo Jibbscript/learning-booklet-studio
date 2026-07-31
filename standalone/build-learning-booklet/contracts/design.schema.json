@@ -1,0 +1,65 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://learning-booklet.studio/contracts/design.schema.json",
+  "title": "Design options and final selection",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["requiresOptions", "options", "recommendationId", "selection", "finalVisualDirection", "rejectedOptionIds"],
+  "properties": {
+    "requiresOptions": { "type": "boolean" },
+    "options": {
+      "type": "array",
+      "maxItems": 3,
+      "oneOf": [
+        { "maxItems": 0 },
+        { "minItems": 3, "maxItems": 3 }
+      ],
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "name", "rationale", "recommended", "visualDirection"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "name": { "type": "string", "minLength": 1 },
+          "rationale": { "type": "string", "minLength": 1 },
+          "recommended": { "type": "boolean" },
+          "visualDirection": {}
+        }
+      }
+    },
+    "recommendationId": {
+      "oneOf": [{ "type": "string", "minLength": 1 }, { "type": "null" }]
+    },
+    "selection": {
+      "oneOf": [
+        { "type": "null" },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["method", "selectedOptionId", "sourceOptionIds", "selectedBy", "selectedAt"],
+          "properties": {
+            "method": {
+              "enum": ["user-selected", "user-hybridized", "recommended-default", "delegated", "direct"]
+            },
+            "selectedOptionId": {
+              "oneOf": [{ "type": "string" }, { "type": "null" }]
+            },
+            "sourceOptionIds": {
+              "type": "array",
+              "items": { "type": "string" },
+              "uniqueItems": true
+            },
+            "selectedBy": { "type": "string" },
+            "selectedAt": { "type": "string", "format": "date-time" }
+          }
+        }
+      ]
+    },
+    "finalVisualDirection": {},
+    "rejectedOptionIds": {
+      "type": "array",
+      "items": { "type": "string" },
+      "uniqueItems": true
+    }
+  }
+}

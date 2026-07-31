@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://learning-booklet.studio/contracts/intent-state.schema.json",
+  "title": "In-progress intent state",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["fields", "conflicts"],
+  "properties": {
+    "fields": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "intent-field.schema.json"
+      },
+      "properties": {
+        "topic": { "$ref": "intent-field.schema.json" },
+        "learner": { "$ref": "intent-field.schema.json" },
+        "depth": { "$ref": "intent-field.schema.json" },
+        "duration": { "$ref": "intent-field.schema.json" },
+        "scope": { "$ref": "intent-field.schema.json" }
+      }
+    },
+    "conflicts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "field", "existing", "incoming", "severity", "status", "createdAt"],
+        "properties": {
+          "id": { "type": "string" },
+          "field": { "type": "string" },
+          "existing": { "$ref": "intent-field.schema.json" },
+          "incoming": { "$ref": "intent-field.schema.json" },
+          "severity": { "enum": ["critical", "warning"] },
+          "status": { "enum": ["open", "resolved"] },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "resolvedAt": {
+            "oneOf": [
+              { "type": "string", "format": "date-time" },
+              { "type": "null" }
+            ]
+          }
+        }
+      }
+    }
+  }
+}
