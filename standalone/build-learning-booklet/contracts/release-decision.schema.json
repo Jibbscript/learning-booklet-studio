@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://learning-booklet.studio/contracts/release-decision.schema.json",
+  "title": "Release decision",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "decision",
+    "runId",
+    "artifactHash",
+    "evaluatedAt",
+    "requiredGateResults",
+    "openFindingsBySeverity",
+    "staleEvidenceIds",
+    "notRunChecks",
+    "residualRisks",
+    "limitations",
+    "evidenceRefs",
+    "terminalStatus",
+    "blockingReasons"
+  ],
+  "properties": {
+    "decision": { "enum": ["pass", "fail"] },
+    "runId": { "type": "string", "minLength": 1 },
+    "artifactHash": {
+      "oneOf": [
+        { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" },
+        { "type": "null" }
+      ]
+    },
+    "evaluatedAt": { "type": "string", "format": "date-time" },
+    "requiredGateResults": { "type": "array", "items": { "type": "object" } },
+    "openFindingsBySeverity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["blocker", "major", "minor", "nit"],
+      "properties": {
+        "blocker": { "type": "integer", "minimum": 0 },
+        "major": { "type": "integer", "minimum": 0 },
+        "minor": { "type": "integer", "minimum": 0 },
+        "nit": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "staleEvidenceIds": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+    "notRunChecks": { "type": "array", "items": { "type": "object" } },
+    "residualRisks": { "type": "array" },
+    "limitations": { "type": "array" },
+    "evidenceRefs": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+    "terminalStatus": { "enum": ["completed", "failed_gate"] },
+    "blockingReasons": { "type": "array", "items": { "type": "string" }, "uniqueItems": true }
+  }
+}

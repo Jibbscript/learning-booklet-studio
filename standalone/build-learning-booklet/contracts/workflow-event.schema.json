@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://learning-booklet.studio/contracts/workflow-event.schema.json",
+  "title": "Workflow event",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "seq", "stateVersion", "type", "runId", "occurredAt", "payload"],
+  "properties": {
+    "id": { "type": "string", "minLength": 1 },
+    "seq": { "type": "integer", "minimum": 1 },
+    "stateVersion": { "type": "integer", "minimum": 1 },
+    "type": {
+      "enum": [
+        "run.created",
+        "run.finished",
+        "run.updated",
+        "phase.started",
+        "phase.completed",
+        "phase.failed",
+        "phase.reopened",
+        "phase.invalidated",
+        "gate.evaluated",
+        "artifact.updated",
+        "input.requested",
+        "design.options.proposed",
+        "design.selected",
+        "verification.recorded",
+        "run.specified",
+        "run.planned",
+        "run.completed"
+      ]
+    },
+    "runId": { "type": "string", "minLength": 1 },
+    "occurredAt": { "type": "string", "format": "date-time" },
+    "idempotencyKey": { "type": "string", "minLength": 1 },
+    "payload": { "type": "object" }
+  }
+}

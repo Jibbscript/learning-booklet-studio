@@ -18,7 +18,7 @@
     "build:mcp": "node scripts/build-mcp.mjs",
     "check": "node scripts/check-repo.mjs",
     "pretest": "npm run build",
-    "test": "npm run test:unit && npm run test:bdd && npm run test:release-verifier && npm run test:mcp && npm run test:widget",
+    "test": "npm run test:unit && npm run test:bdd && npm run test:release-verifier && npm run test:mcp && npm run test:widget && npm run test:standalone",
     "test:unit": "node --test tests/unit/*.test.mjs",
     "test:bdd": "cucumber-js --no-strict --import tests/step-definitions/**/*.mjs tests/features/**/*.feature",
     "test:release-verifier": "node --test tests/integration/release-verifier.test.mjs tests/integration/automated-release-evidence.test.mjs tests/integration/installed-candidate.test.mjs tests/integration/installed-package-smoke.test.mjs",
@@ -32,7 +32,8 @@
     "package:release": "npm run build && node scripts/verify-oss-release.mjs",
     "validate": "npm run validate:plugin && npm run validate:skill",
     "validate:plugin": "node scripts/validate-plugin.mjs",
-    "validate:skill": "node scripts/validate-skill.mjs"
+    "validate:skill": "node scripts/validate-skill.mjs",
+    "test:standalone": "node --test tests/integration/standalone-skill.test.mjs"
   },
   "dependencies": {
     "@ag-ui/core": "0.0.57",

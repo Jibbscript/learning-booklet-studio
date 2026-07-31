@@ -2,6 +2,16 @@
 
 All notable changes are documented here. The project uses Semantic Versioning. Contract migrations are called out explicitly.
 
+## Unreleased
+
+Enterprise stand-alone distribution:
+
+- add a relocatable, self-encapsulated Agent Skill directory containing the complete learning-booklet prompt, references, schemas, workflow engine, scripts, configuration, and artifact template;
+- exclude service, projection, and graphical integration code from the stand-alone runtime;
+- bundle zero-dependency schema validation and add isolation tests proving a copied directory can create and read workflow state without repository-relative imports.
+
+Migration notes: none. The existing plugin distribution and its single public skill remain unchanged.
+
 ## 0.1.3 — 2026-07-28
 
 First OSS production-release policy and automation:

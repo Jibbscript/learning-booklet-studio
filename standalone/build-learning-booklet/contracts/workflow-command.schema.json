@@ -1,0 +1,297 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://learning-booklet.studio/contracts/workflow-command.schema.json",
+  "title": "Workflow engine command envelope",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["type", "payload"],
+  "properties": {
+    "type": {
+      "enum": [
+        "intent.patch",
+        "design.propose",
+        "design.select",
+        "input.request",
+        "phase.start",
+        "phase.fail",
+        "phase.reopen",
+        "phase.complete",
+        "artifact.record",
+        "evidence.record",
+        "gate.evaluate",
+        "workflow.invalidate",
+        "source.register",
+        "finding.record",
+        "finding.resolve",
+        "release.decide"
+      ]
+    },
+    "payload": { "type": "object" },
+    "idempotencyKey": { "type": "string", "minLength": 1 },
+    "expectedStateVersion": { "type": "integer", "minimum": 1 }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "type": { "const": "intent.patch" } }, "required": ["type"] },
+      "then": {
+        "properties": {
+          "payload": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["patch"],
+            "properties": {
+              "patch": { "type": "object" },
+              "origin": { "enum": ["user", "researched", "inferred", "defaulted"] },
+              "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+              "evidenceRefs": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+              "meta": { "type": "object" }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "type": { "const": "design.propose" } }, "required": ["type"] },
+      "then": {
+        "properties": {
+          "payload": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["options"],
+            "properties": {
+              "options": { "type": "array", "minItems": 3, "maxItems": 3 },
+              "meta": { "type": "object" }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "type": { "const": "design.select" } }, "required": ["type"] },
+      "then": {
+        "properties": {
+          "payload": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["selection"],
+            "properties": {
+              "selection": { "type": "object" },
+              "selectedBy": { "type": "string" },
+              "meta": { "type": "object" }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "type": { "const": "input.request" } }, "required": ["type"] },
+      "then": {
+        "properties": {
+          "payload": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["request"],
+            "properties": {
+              "request": { "type": "object" },
+              "meta": { "type": "object" }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "type": { "enum": ["phase.start", "phase.complete"] } }, "required": ["type"] },
+      "then": {
+        "properties": {
+          "payload": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["phaseId"],
+            "properties": {
+              "phaseId": { "enum": ["I0", "P0", "P1", "P2", "P3", "P4", "P5", "P6", "P7", "P8", "P9", "P10"] },
+              "meta": { "type": "object" }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "type": { "const": "phase.fail" } }, "required": ["type"] },
+      "then": {
+        "properties": {
+          "payload": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["phaseId", "failure"],
+            "properties": {
+              "phaseId": { "enum": ["I0", "P0", "P1", "P2", "P3", "P4", "P5", "P6", "P7", "P8", "P9", "P10"] },
+              "failure": { "type": "object" },
+              "meta": { "type": "object" }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "type": { "const": "phase.reopen" } }, "required": ["type"] },
+      "then": {
+        "properties": {
+          "payload": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["reopen"],
+            "properties": {
+              "reopen": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["failedPhaseId", "responsiblePhaseId"],
+                "properties": {
+                  "failedPhaseId": { "enum": ["I0", "P0", "P1", "P2", "P3", "P4", "P5", "P6", "P7", "P8", "P9", "P10"] },
+                  "responsiblePhaseId": { "enum": ["I0", "P0", "P1", "P2", "P3", "P4", "P5", "P6", "P7", "P8", "P9", "P10"] },
+                  "reason": { "type": "string", "minLength": 1 }
+                }
+              },
+              "meta": { "type": "object" }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "type": { "const": "artifact.record" } }, "required": ["type"] },
+      "then": {
+        "properties": {
+          "payload": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["artifact"],
+            "properties": {
+              "artifact": { "type": "object" },
+              "meta": { "type": "object" }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "type": { "const": "evidence.record" } }, "required": ["type"] },
+      "then": {
+        "properties": {
+          "payload": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["evidence"],
+            "properties": {
+              "evidence": { "type": "object" },
+              "meta": { "type": "object" }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "type": { "const": "gate.evaluate" } }, "required": ["type"] },
+      "then": {
+        "properties": {
+          "payload": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["gate"],
+            "properties": {
+              "gate": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["phaseId", "gateId", "evidenceIds"],
+                "properties": {
+                  "phaseId": { "enum": ["I0", "P0", "P1", "P2", "P3", "P4", "P5", "P6", "P7", "P8", "P9", "P10"] },
+                  "gateId": { "type": "string", "minLength": 1 },
+                  "evidenceIds": { "type": "array", "items": { "type": "string" }, "uniqueItems": true }
+                }
+              },
+              "meta": { "type": "object" }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "type": { "const": "workflow.invalidate" } }, "required": ["type"] },
+      "then": {
+        "properties": {
+          "payload": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["source"],
+            "properties": {
+              "source": { "type": "object" },
+              "meta": { "type": "object" }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "type": { "const": "source.register" } }, "required": ["type"] },
+      "then": {
+        "properties": {
+          "payload": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["source"],
+            "properties": {
+              "source": { "type": "object" },
+              "meta": { "type": "object" }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "type": { "const": "finding.record" } }, "required": ["type"] },
+      "then": {
+        "properties": {
+          "payload": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["finding"],
+            "properties": {
+              "finding": { "type": "object" },
+              "meta": { "type": "object" }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "type": { "const": "finding.resolve" } }, "required": ["type"] },
+      "then": {
+        "properties": {
+          "payload": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["findingId"],
+            "properties": {
+              "findingId": { "type": "string", "minLength": 1 },
+              "resolution": {},
+              "meta": { "type": "object" }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "type": { "const": "release.decide" } }, "required": ["type"] },
+      "then": {
+        "properties": {
+          "payload": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "evaluatedAt": { "type": "string", "format": "date-time" }
+            }
+          }
+        }
+      }
+    }
+  ]
+}
