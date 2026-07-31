@@ -46,6 +46,6 @@
     "ajv": "8.20.0",
     "axe-core": "4.12.1",
     "esbuild": "0.28.1",
-    "playwright": "1.61.1"
+    "playwright": "1.62.0"
   }
 }
